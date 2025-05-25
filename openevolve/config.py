@@ -15,10 +15,10 @@ class LLMConfig:
     """Configuration for LLM models"""
 
     # n-model configuration
-    models: List[Dict[str, Union[str, float]]] = field(
+    models: List[Dict[str, Union[str, float, str]]] = field(
         default_factory=lambda: [
-            {},
-            {},
+            {"name": "", "weight": 0.0, "system_message": None},
+            {"name": "", "weight": 0.0, "system_message": None},
         ]
     )
 

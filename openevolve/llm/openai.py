@@ -22,9 +22,11 @@ class OpenAILLM(LLMInterface):
         self,
         config: LLMConfig,
         model: Optional[str] = None,
+        system_message: Optional[str] = None,
     ):
         self.config = config
         self.model = model or config.primary_model
+        self.system_prompt = system_message or config.system_message
 
         # Set up API client
         self.client = openai.OpenAI(
@@ -37,7 +39,7 @@ class OpenAILLM(LLMInterface):
     async def generate(self, prompt: str, **kwargs) -> str:
         """Generate text from a prompt"""
         return await self.generate_with_context(
-            system_message=self.config.system_message,
+            system_message=self.system_message,
             messages=[{"role": "user", "content": prompt}],
             **kwargs,
         )
