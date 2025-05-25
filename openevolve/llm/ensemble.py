@@ -20,24 +20,20 @@ class LLMEnsemble:
     def __init__(self, config: LLMConfig):
         self.config = config
 
-        # Initialize primary and secondary models
-        self.primary_model = OpenAILLM(config, model=config.primary_model)
-        self.secondary_model = OpenAILLM(config, model=config.secondary_model)
+        # Initialize models from the configuration
+        self.models = [OpenAILLM(config, model=model["name"]) for model in config.models]
 
-        # Model weights for sampling
-        self._weights = [
-            config.primary_model_weight,
-            config.secondary_model_weight,
-        ]
-
-        # Normalize weights
+        # Extract and normalize model weights
+        self._weights = [model["weight"] for model in config.models]
         total = sum(self._weights)
         self._weights = [w / total for w in self._weights]
 
         logger.info(
             f"Initialized LLM ensemble with models: "
-            f"{config.primary_model} (weight: {self._weights[0]:.2f}), "
-            f"{config.secondary_model} (weight: {self._weights[1]:.2f})"
+            + ", ".join(
+                f"{model['name']} (weight: {weight:.2f})"
+                for model, weight in zip(config.models, self._weights)
+            )
         )
 
     async def generate(self, prompt: str, **kwargs) -> str:
@@ -54,9 +50,8 @@ class LLMEnsemble:
 
     def _sample_model(self) -> LLMInterface:
         """Sample a model from the ensemble based on weights"""
-        models = [self.primary_model, self.secondary_model]
-        index = random.choices(range(len(models)), weights=self._weights, k=1)[0]
-        return models[index]
+        index = random.choices(range(len(self.models)), weights=self._weights, k=1)[0]
+        return self.models[index]
 
     async def generate_multiple(self, prompt: str, n: int, **kwargs) -> List[str]:
         """Generate multiple texts in parallel"""

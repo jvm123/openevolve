@@ -14,13 +14,30 @@ import yaml
 class LLMConfig:
     """Configuration for LLM models"""
 
-    # Primary model
+    # n-model configuration
+    models: List[Dict[str, Union[str, float]]] = field(
+        default_factory=lambda: [
+            {},
+            {},
+        ]
+    )
+
+    # Backwardes compatibility with primary_model(_weight) options
     primary_model: str = "gemini-2.0-flash-lite"
     primary_model_weight: float = 0.8
-
-    # Secondary model
     secondary_model: str = "gemini-2.0-flash"
     secondary_model_weight: float = 0.2
+
+    def __post_init__(self):
+        """Handle backward compatibility for primary_model(_weight) and secondary_model(_weight)."""
+        if self.primary_model:
+            self.models[0]["name"] = self.primary_model
+        if self.primary_model_weight:
+            self.models[0]["weight"] = self.primary_model_weight
+        if self.secondary_model:
+            self.models[1]["name"] = self.secondary_model
+        if self.secondary_model_weight:
+            self.models[1]["weight"] = self.secondary_model_weight
 
     # API configuration
     api_base: str = "https://api.openai.com/v1"
@@ -169,10 +186,7 @@ class Config:
             "random_seed": self.random_seed,
             # Component configurations
             "llm": {
-                "primary_model": self.llm.primary_model,
-                "primary_model_weight": self.llm.primary_model_weight,
-                "secondary_model": self.llm.secondary_model,
-                "secondary_model_weight": self.llm.secondary_model_weight,
+                "models": self.llm.models,
                 "api_base": self.llm.api_base,
                 "temperature": self.llm.temperature,
                 "top_p": self.llm.top_p,
