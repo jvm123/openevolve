@@ -21,17 +21,17 @@ class LLMEnsemble:
         self.config = config
 
         # Initialize models from the configuration
-        self.models = [OpenAILLM(config, model=model["name"]) for model in config.models]
+        self.models = [OpenAILLM(model_cfg) for model_cfg in config.models]
 
         # Extract and normalize model weights
-        self._weights = [model["weight"] for model in config.models]
+        self._weights = [model.weight for model in config.models]
         total = sum(self._weights)
         self._weights = [w / total for w in self._weights]
 
         logger.info(
             f"Initialized LLM ensemble with models: "
             + ", ".join(
-                f"{model['name']} (weight: {weight:.2f})"
+                f"{model.name} (weight: {weight:.2f})"
                 for model, weight in zip(config.models, self._weights)
             )
         )

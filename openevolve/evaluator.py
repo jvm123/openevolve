@@ -275,14 +275,14 @@ class Evaluator:
             1. Readability: How easy is the code to read and understand?
             2. Maintainability: How easy would the code be to maintain and modify?
             3. Efficiency: How efficient is the code in terms of time and space complexity?
-            
+
             For each metric, provide a score between 0.0 and 1.0, where 1.0 is best.
-            
+
             Code to evaluate:
             ```python
             {program_code}
             ```
-            
+
             Return your evaluation as a JSON object with the following format:
             {{
                 "readability": [score],
