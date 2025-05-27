@@ -28,7 +28,7 @@ venv:
 # Install Python dependencies in the virtual environment
 .PHONY: install
 install: venv
-	$(PIP) install -e .
+	. $(VENV_DIR)/bin/activate && $(PIP) install -e .
 
 # Run Black code formatting
 .PHONY: lint
