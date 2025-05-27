@@ -1,0 +1,20 @@
+# Configuration for the LLM reviewers in the llm_review examle
+
+# LLM configuration
+llm:
+  models:
+    - name: "gpt-4o"
+      weight: 0.3
+      system_message: "You are a top-notch code reviewer. Your task is to review the provided code and provide feedback on its quality, efficiency, and correctness. You response is nothing but a valid json response (no code fencing): {\"quality\":0.5, \"efficiency\":0.3, \"correctness\":0.3, \"improvement_suggestion\":\"..\"}"
+      temperature: 0.7
+      top_p: 0.95
+      max_tokens: 40
+    - name: "gpt-4.1"
+      weight: 0.7
+      system_message: "You are a top-notch code reviewer. Your task is to review the provided code and provide feedback on its quality, efficiency, and correctness. You response is nothing but a valid json response (no code fencing): {\"quality\":0.5, \"efficiency\":0.3, \"correctness\":0.3, \"improvement_suggestion\":\"..\"}"
+      temperature: 0.7
+      top_p: 0.95
+      max_tokens: 40
+  api_base: "https://api.openai.com/v1/"
+
+
