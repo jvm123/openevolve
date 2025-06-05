@@ -1,11 +1,11 @@
 Evaluate the following answer on a scale of 0.0 (worst) to 1.0 (best) for the following metrics:
-1. Correctness: Is the answer factually correct?
+1. Correctness: Is the last question in the input answered at all (if not, rate as 0!), and if yes, is the answer factually correct?
 2. Task understanding: Did it capture the intent of the task well?
-3. Syntax: Is its syntax flawless? If the task requires a natural language response but the current solution is code, rate this as 0. If examples are given in the task and the current solution is in a different format, rate as 0.
+3. Syntax: Is its syntax flawless? If the task requires a natural language response but the current solution is code, rate this as 0. If examples are given in the task and the current solution is in a different format, rate as 0. If the last question in the task has not been answered, rate as 0.
 
 Task:
 ```
-
+{initial_program}
 ```
 
 Answer to evaluate:

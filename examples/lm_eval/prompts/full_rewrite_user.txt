@@ -11,8 +11,6 @@
 ```
 
 # Task
-Rewrite the answer to improve its performance on the specified metrics.
-Provide the complete new answer.
-
+Continue the task below with the improved solution (unless the current one is already perfect):
 ```
 {initial_program}

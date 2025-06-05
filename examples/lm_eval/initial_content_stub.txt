@@ -1,30 +1,33 @@
-Question: Elmo has 3 times as many books as his sister, Laura. Laura has twice as many books as her brother, Stu. If Elmo has 24 books, how many books does Stu have?
-Answer: Laura has 24/3=<<24/3=8>>8 books.
-Stu has 8/2=<<8/2=4>>4 books.
-#### 4
+Question: A jug is filled with 5 liters of water and a bucket is filled with 4 jugs. How many liters of water are contained in 2 buckets?
+Answer: 4 jugs contain 4*5 = <<4*5=20>>20 liters of water.
+2 bucket contains 20*2 = <<20*2=40>>40 liters of water.
+#### 40
 
-Question: A toy car factory made 60 cars yesterday. Today, they made twice the number of cars than yesterday. How many toy cars did the factory make?
-Answer: They made 60 x 2 = <<60*2=120>>120 cars today.
-So, the factory made a total of 60 + 120 = <<60+120=180>>180 cars.
-#### 180
+Question: There are 3 workers producing chairs in a furniture factory. Each of them produces 4 chairs an hour. As a group, they produce an additional chair every 6 hours. In total, how many chairs have been produced after 6 hours?
+Answer: The workers produce a combined total of 3 workers * 4 hours = <<3*4=12>>12 chairs every hour.
+After 6 hours, they have therefore produced 12 * 6 = <<12*6=72>>72 chairs.
+Adding the additional chair means the total amount of chairs produced is 72 + 1 = <<72+1=73>>73 chairs.
+#### 73
 
-Question: A charity is delivering chicken and rice dinners to a shelter for the hungry. They have a hundred plates to deliver. The rice cost ten cents a plate and the chicken cost forty cents a plate. How many dollars did the charity spend on the food for the dinners?
-Answer: Each chicken and rice plate cost 10 + 40 = <<10+40=50>>50 cents.
-The charity spent 50 * 100 = <<50*100=5000>>5000 cents for the dinners.
-There are 100 cents in a dollar, so the charity spent 5000 / 100 = $<<5000/100=50>>50 for the dinners.
-#### 50
+Question: Sally had 14 fries at lunch. Her friend Mark gave her one-third of his 36 fries at lunch. How many fries did Sally have for lunch after that?
+Answer: Mark gave Sally 36/3=<<36/3=12>>12 fries
+After that Sally has 14+12=<<14+12=26>>26 fries
+#### 26
 
-Question: Mary, Edna, and Lucy are athletes who train every Saturday. Mary ran 3/8 of a 24-kilometer field on one Saturday. Edna ran 2/3 of the distance of Edna, and Lucy ran 5/6 of the distance of Edna. How many more kilometers should Lucy run to cover the same distance as Mary?
-Answer: Mary ran 3/8 x 24 = <<3/8*24=9>>9 kilometers.
-Edna ran 2/3 x 9 = <<2/3*9=6>>6 kilometers.
-Lucy ran 5/6 x 6 = <<5/6*6=5>>5 kilometers.
-Lucy should run 9 - 5 = <<9-5=4>>4 kilometers more.
-#### 4
+Question: Isabella has $45 more than Sam but only $15 more than Giselle. If Giselle has $120, calculate the total amount of money each shopper will receive if Isabella, Sam, and Giselle donate the money to three shoppers at their local town's supermarket who then decides to share it equally.
+Answer: If Isabella has $15 more than Giselle, she has $120+$15 = $135
+Combined, Isabella and Giselle has $135+$120=$<<135+120=255>>255
+Isabella has $45 more than Sam, meaning Sam has $135-$45=$90
+Together, Sam, Isabella, and Giselle has $255+$90=$<<255+90=345>>345
+if they donate the money to three shoppers at their local town's supermarket who share it equally, each shopper will receive $345/3=$<<345/3=115>>115
+#### 115
 
-Question: Adam teaches 50 students a year. How many students will Adam teach in 10 years if in the first year he only teaches 40 students?
-Answer: Adam will teach 50 * 9 = <<50*9=450>>450 students in 9 years.
-So, in 10 year Adam will teach 450 + 40 = <<450+40=490>>490 students.
-#### 490
+Question: In Fred the Farmer's barn, there were 100 horses, 29 sheep, and 9 chickens. Brian bought half of the animals and sold them at the market. Jeremy then gifted Fred an additional 37 goats. If exactly half of the animals in the barn are male animals, how many male animals are there in the barn?
+Answer: Fred's barn started with 100 + 29 + 9 = <<100+29+9=138>>138 animals.
+Brian bought half of these, so there were 138 / 2 = <<138/2=69>>69 remaining.
+After Jeremy gifted Fred 37 goats, there were 69 + 37 = <<69+37=106>>106 animals in the barn.
+So, 106 / 2 = <<106/2=53>>53 of these animals are male.
+#### 53
 
-Question: Marissa is hiking a 12-mile trail. She took 1 hour to walk the first 4 miles, then another hour to walk the next two miles. If she wants her average speed to be 4 miles per hour, what speed (in miles per hour) does she need to walk the remaining distance?
+Question: A merchant wants to make a choice of purchase between 2 purchase plans: jewelry worth $5,000 or electronic gadgets worth $8,000. His financial advisor speculates that the jewelry market will go up 2.5% while the electronic gadgets market will rise 1.2% within the same month. If the merchant is looking to maximize profit at the end of this month by making a choice, how much profit would this be?
 Answer:
