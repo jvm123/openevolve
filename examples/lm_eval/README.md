@@ -37,7 +37,8 @@ The table below summarizes example results with OpenEvolve. The expectation woul
 for the `gsm8k` benchmark, using a limit of 10 examples and different numbers of iterations.
 - gsm8k
   - gemma3:12b-it-qat / llama-4-scout-17b-16e-instruct / gemma3:12b-it-qat, limit 20, iterations 1: 50%
-  - gemma3:12b-it-qat / llama-4-scout-17b-16e-instruct / gemma3:12b-it-qat, limit 20, iterations 15:
+  - gemma3:12b-it-qat / (llama-4-scout-17b-16e-instruct) / gemma3:12b-it-qat, limit 20, iterations 10: 70%
+  - gemma3:12b-it-qat / llama-4-scout-17b-16e-instruct / gemma3:12b-it-qat, limit 20, iterations 20:
 
 --old values below:--
   - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`/`llama3.1-8b`, limit 10, iterations 1: 30%
