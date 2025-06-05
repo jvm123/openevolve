@@ -114,6 +114,7 @@ class OpenEvolve:
             evaluation_file,
             self.llm_evaluator_ensemble,
             self.evaluator_prompt_sampler,
+            initial_program=self.initial_program_code,
         )
 
         logger.info(f"Initialized OpenEvolve with {initial_program_path} " f"and {evaluation_file}")

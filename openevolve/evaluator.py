@@ -39,11 +39,13 @@ class Evaluator:
         evaluation_file: str,
         llm_ensemble: Optional[LLMEnsemble] = None,
         prompt_sampler: Optional[PromptSampler] = None,
+        initial_program="",
     ):
         self.config = config
         self.evaluation_file = evaluation_file
         self.llm_ensemble = llm_ensemble
         self.prompt_sampler = prompt_sampler
+        self.initial_program = initial_program
 
         # Create a task pool for parallel evaluation
         self.task_pool = TaskPool(max_concurrency=config.parallel_evaluations)
@@ -291,7 +293,8 @@ class Evaluator:
         try:
             # Create prompt for LLM
             prompt = self.prompt_sampler.build_prompt(
-                current_program=program_code, template_key="evaluation"
+                current_program=program_code, template_key="evaluation",
+                initial_program=self.initial_program,
             )
 
             # Get LLM response
