@@ -492,7 +492,7 @@ class ProgramDatabase:
         avg1 = safe_numeric_average(program1.metrics)
         avg2 = safe_numeric_average(program2.metrics)
 
-        return avg1 > avg2
+        return avg1 >= avg2
 
     def _update_archive(self, program: Program) -> None:
         """
