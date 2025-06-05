@@ -1,33 +1,32 @@
-Question: A jug is filled with 5 liters of water and a bucket is filled with 4 jugs. How many liters of water are contained in 2 buckets?
-Answer: 4 jugs contain 4*5 = <<4*5=20>>20 liters of water.
-2 bucket contains 20*2 = <<20*2=40>>40 liters of water.
-#### 40
+Question: Joel’s garden is 64 square feet large. He wants to use half of the garden for fruits and half of the garden for vegetables. He wants to use a quarter of the fruit section for strawberries. How many square feet of the garden will be used for strawberries?
+Answer: The number of square feet used for fruit is 64 / 2 = <<64/2=32>>32 square feet
+The number of square feet used for strawberries is 32 / 4 = <<32/4=8>>8 square feet
+#### 8
 
-Question: There are 3 workers producing chairs in a furniture factory. Each of them produces 4 chairs an hour. As a group, they produce an additional chair every 6 hours. In total, how many chairs have been produced after 6 hours?
-Answer: The workers produce a combined total of 3 workers * 4 hours = <<3*4=12>>12 chairs every hour.
-After 6 hours, they have therefore produced 12 * 6 = <<12*6=72>>72 chairs.
-Adding the additional chair means the total amount of chairs produced is 72 + 1 = <<72+1=73>>73 chairs.
-#### 73
+Question: Ruth goes to school 8 hours a day and 5 days a week. She is in math class 25% of this time. How many hours per week does she spend in math class?
+Answer: She is in school for 40 hours because 5 x 8 = <<5*8=40>>40
+She is in math class for 10 hours a week because 40 x .25 = <<40*.25=10>>10
+#### 10
 
-Question: Sally had 14 fries at lunch. Her friend Mark gave her one-third of his 36 fries at lunch. How many fries did Sally have for lunch after that?
-Answer: Mark gave Sally 36/3=<<36/3=12>>12 fries
-After that Sally has 14+12=<<14+12=26>>26 fries
-#### 26
+Question: Allyn is a golfer. At the starting tee, he hit the golf ball and it traveled 180 yards straight toward the hole.  On his second turn, he hit the ball again straight toward the hole and it traveled half as far as it did on his first turn, but the ball landed 20 yards beyond the hole.  On his third swing, he hit the ball onto the green and it rolled into the hole.  What is the distance, in yards, from the starting tee to the hole?
+Answer: On his second turn, the ball traveled 180/2=<<180/2=90>>90 yards.
+After two turns, the ball had traveled 180+90=<<180+90=270>>270 yards.
+Since, after the second turn, the ball was 20 yards past the hole, this means the distance from the starting tee to the hole was 270-20=<<270-20=250>>250 yards.
+#### 250
 
-Question: Isabella has $45 more than Sam but only $15 more than Giselle. If Giselle has $120, calculate the total amount of money each shopper will receive if Isabella, Sam, and Giselle donate the money to three shoppers at their local town's supermarket who then decides to share it equally.
-Answer: If Isabella has $15 more than Giselle, she has $120+$15 = $135
-Combined, Isabella and Giselle has $135+$120=$<<135+120=255>>255
-Isabella has $45 more than Sam, meaning Sam has $135-$45=$90
-Together, Sam, Isabella, and Giselle has $255+$90=$<<255+90=345>>345
-if they donate the money to three shoppers at their local town's supermarket who share it equally, each shopper will receive $345/3=$<<345/3=115>>115
-#### 115
+Question: A family of 12 monkeys collected 10 piles of bananas. 6 piles had 9 hands, with each hand having 14 bananas, while the remaining piles had 12 hands, with each hand having 9 bananas. How many bananas would each monkey get if they divide the bananas equally amongst themselves?
+Answer: The first 6 bunches had 6 x 9 x 14 = <<6*9*14=756>>756 bananas.
+There were 10 - 6 = <<10-6=4>>4 remaining bunches.
+The 4 remaining bunches had 4 x 12 x 9 = <<4*12*9=432>>432 bananas.
+All together, there were 756 + 432 = <<756+432=1188>>1188 bananas
+Each monkey would get 1188/12 = <<1188/12=99>>99 bananas.
+#### 99
 
-Question: In Fred the Farmer's barn, there were 100 horses, 29 sheep, and 9 chickens. Brian bought half of the animals and sold them at the market. Jeremy then gifted Fred an additional 37 goats. If exactly half of the animals in the barn are male animals, how many male animals are there in the barn?
-Answer: Fred's barn started with 100 + 29 + 9 = <<100+29+9=138>>138 animals.
-Brian bought half of these, so there were 138 / 2 = <<138/2=69>>69 remaining.
-After Jeremy gifted Fred 37 goats, there were 69 + 37 = <<69+37=106>>106 animals in the barn.
-So, 106 / 2 = <<106/2=53>>53 of these animals are male.
-#### 53
+Question: Shane wants to take as many photos as possible this year. He takes 146 photos in the first 2 months of the year. In January, he takes 2 photos every day. The rest of the photos were taken in February. If in February he took an equal number of photos each week, how many photos did Shane take each week in February?
+Answer: Shane takes a total of 2 photos/day * 31 days = <<2*31=62>>62 photos in January.
+This means he must have taken 146 total photos – 62 January photos = 84 photos in February.
+As he took an equal number each week, he must have taken 84 photos / 4 weeks = <<84/4=21>>21 photos each week.
+#### 21
 
-Question: A merchant wants to make a choice of purchase between 2 purchase plans: jewelry worth $5,000 or electronic gadgets worth $8,000. His financial advisor speculates that the jewelry market will go up 2.5% while the electronic gadgets market will rise 1.2% within the same month. If the merchant is looking to maximize profit at the end of this month by making a choice, how much profit would this be?
+Question: Melanie is a door-to-door saleswoman. She sold a third of her vacuum cleaners at the green house, 2 more to the red house, and half of what was left at the orange house. If Melanie has 5 vacuum cleaners left, how many did she start with?
 Answer:

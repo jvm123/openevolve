@@ -4,13 +4,21 @@ log_level: "DEBUG"
 # LLM configuration
 llm:
   models:
-    - name: "qwen-3-32b"
+    - name: "gemma3:12b-it-qat"
       weight: 0.8
-    - name: "deepseek-r1-distill-llama-70b"
+      api_base: "http://localhost:11434/v1/"
+      api_key: "ollama"
+    - name: "llama-4-scout-17b-16e-instruct"
       weight: 0.2
-  evaluator_models:
     - name: "qwen-3-32b"
+      weight: 0.0
+    - name: "deepseek-r1-distill-llama-70b"
+      weight: 0.0
+  evaluator_models:
+    - name: "gemma3:12b-it-qat"
       weight: 1.0
+      api_base: "http://localhost:11434/v1/"
+      api_key: "ollama"
   api_base: "https://api.cerebras.ai/v1/"
   temperature: 0.7
   top_p: 0.95

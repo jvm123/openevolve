@@ -36,14 +36,16 @@ The table below summarizes example results with OpenEvolve. The expectation woul
 
 for the `gsm8k` benchmark, using a limit of 10 examples and different numbers of iterations.
 - gsm8k
-  - qwen-3-32b / deepseek-r1-distill-llama-70b, limit 14, iterations 1: 57%
+  - gemma3:12b-it-qat / llama-4-scout-17b-16e-instruct / gemma3:12b-it-qat, limit 20, iterations 1: 50%
+  - gemma3:12b-it-qat / llama-4-scout-17b-16e-instruct / gemma3:12b-it-qat, limit 20, iterations 15:
 
 --old values below:--
-  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`, limit 10, iterations 1: 30%
-  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`, limit 10, iterations 2: 40%
-  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`, limit 10, iterations 3: 70%
-  - qwen-3-32b / deepseek-r1-distill-llama-70b, limit 1, iterations 10: 100%
-  - qwen-3-32b / deepseek-r1-distill-llama-70b, limit 20, iterations 10: 95% ; =100 0000 tokens.
+  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`/`llama3.1-8b`, limit 10, iterations 1: 30%
+  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`/`llama3.1-8b`, limit 10, iterations 2: 40%
+  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`/`llama3.1-8b`, limit 10, iterations 3: 70%
+  - qwen-3-32b / deepseek-r1-distill-llama-70b / qwen-3-32b, limit 1, iterations 10: 100%
+  - qwen-3-32b / deepseek-r1-distill-llama-70b / qwen-3-32b, limit 20, iterations 10: 95% ; =100 0000 tokens.
+  - qwen-3-32b / deepseek-r1-distill-llama-70b / qwen-3-32b, limit 14, iterations 1: 57%
   20/8500 problems, 10 instead of 100 iterations. 425*10 more tokens needed to do full gsm8k with 100 iterations => 425 000 000
 
 | Benchmark | Limit | Iterations | `llama-3.3-70b`/`llama-4-scout-17b-16e-instruct` | `llama3.1-8b`/`llama-4-scout-17b-16e-instruct` |

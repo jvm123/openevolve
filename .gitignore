@@ -1,4 +1,5 @@
 results/
+examples/lm_eval/initial_content_stub.txt
 examples/lm_eval/prompts/system_message.txt
 examples/lm_eval/prompts/evaluator_system_message.txt
 
