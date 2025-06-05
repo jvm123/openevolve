@@ -240,6 +240,7 @@ class OpenEvolve:
                 language=self.language,
                 evolution_round=i,
                 allow_full_rewrite=self.config.allow_full_rewrites,
+                initial_program=self.initial_program_code,
             )
 
             # Generate code modification
