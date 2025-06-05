@@ -14,4 +14,5 @@
 Rewrite the answer to improve its performance on the specified metrics.
 Provide the complete new answer.
 
-# Your rewritten answer here
+```
+{initial_program}

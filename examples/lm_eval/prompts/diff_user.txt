@@ -11,7 +11,7 @@
 ```
 
 # Task
-Suggest improvements to the answer that will lead to better performance on the specified metrics.
+Suggest improvements to the current solution that will lead to better performance on the specified metrics.
 
 You MUST use the exact SEARCH/REPLACE diff format shown below to indicate changes:
 

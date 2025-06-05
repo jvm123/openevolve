@@ -1,1 +1,30 @@
-insert the answer to the task here!
+Question: Elmo has 3 times as many books as his sister, Laura. Laura has twice as many books as her brother, Stu. If Elmo has 24 books, how many books does Stu have?
+Answer: Laura has 24/3=<<24/3=8>>8 books.
+Stu has 8/2=<<8/2=4>>4 books.
+#### 4
+
+Question: A toy car factory made 60 cars yesterday. Today, they made twice the number of cars than yesterday. How many toy cars did the factory make?
+Answer: They made 60 x 2 = <<60*2=120>>120 cars today.
+So, the factory made a total of 60 + 120 = <<60+120=180>>180 cars.
+#### 180
+
+Question: A charity is delivering chicken and rice dinners to a shelter for the hungry. They have a hundred plates to deliver. The rice cost ten cents a plate and the chicken cost forty cents a plate. How many dollars did the charity spend on the food for the dinners?
+Answer: Each chicken and rice plate cost 10 + 40 = <<10+40=50>>50 cents.
+The charity spent 50 * 100 = <<50*100=5000>>5000 cents for the dinners.
+There are 100 cents in a dollar, so the charity spent 5000 / 100 = $<<5000/100=50>>50 for the dinners.
+#### 50
+
+Question: Mary, Edna, and Lucy are athletes who train every Saturday. Mary ran 3/8 of a 24-kilometer field on one Saturday. Edna ran 2/3 of the distance of Edna, and Lucy ran 5/6 of the distance of Edna. How many more kilometers should Lucy run to cover the same distance as Mary?
+Answer: Mary ran 3/8 x 24 = <<3/8*24=9>>9 kilometers.
+Edna ran 2/3 x 9 = <<2/3*9=6>>6 kilometers.
+Lucy ran 5/6 x 6 = <<5/6*6=5>>5 kilometers.
+Lucy should run 9 - 5 = <<9-5=4>>4 kilometers more.
+#### 4
+
+Question: Adam teaches 50 students a year. How many students will Adam teach in 10 years if in the first year he only teaches 40 students?
+Answer: Adam will teach 50 * 9 = <<50*9=450>>450 students in 9 years.
+So, in 10 year Adam will teach 450 + 40 = <<450+40=490>>490 students.
+#### 490
+
+Question: Marissa is hiking a 12-mile trail. She took 1 hour to walk the first 4 miles, then another hour to walk the next two miles. If she wants her average speed to be 4 miles per hour, what speed (in miles per hour) does she need to walk the remaining distance?
+Answer:

@@ -28,33 +28,34 @@ options:
                         output path for results
 ```
 
-Early examples that **were meant to** indicate that more evolution iterations improve task performance -- I suspect the prompting may not be ideal yet:
-```
-$ python3 examples/lm_eval/lm-eval.py --tasks gsm8k --limit 10 --iterations 1
-[..]
-Headline metrics:
-  gsm8k           exact_match,strict-match 80.000%
-[..]
+## Example Results
 
+GSM8K is a benchmark dataset for arithmetic reasoning, with 8500 grade school level math problems. See SotA benchmark results at https://paperswithcode.com/sota/arithmetic-reasoning-on-gsm8k.
 
-$ python3 examples/lm_eval/lm-eval.py --tasks gsm8k --limit 10 --iterations 3
-[..]
-Headline metrics:
-  gsm8k           exact_match,strict-match 90.000%
-[..]
+The table below summarizes example results with OpenEvolve. The expectation would be that with more iterations, even when primary and secondary model are both weaker than those in the SotA benchmark, eventually a similar accuracy will be hit. First results below:
 
-$ python3 examples/lm_eval/lm-eval.py --tasks gsm8k --limit 10 --iterations 10
-[..]
-Headline metrics:
-  gsm8k           exact_match,strict-match 80.000%
-[..]
+for the `gsm8k` benchmark, using a limit of 10 examples and different numbers of iterations.
+- gsm8k
+  - qwen-3-32b / deepseek-r1-distill-llama-70b, limit 14, iterations 1: 57%
 
-$ python3 examples/lm_eval/lm-eval.py --tasks gsm8k --limit 10 --iterations 15
-[..]
-Headline metrics:
-  gsm8k           exact_match,strict-match 70.000%
-[..]
-```
+--old values below:--
+  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`, limit 10, iterations 1: 30%
+  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`, limit 10, iterations 2: 40%
+  - `llama3.1-8b`/`llama-4-scout-17b-16e-instruct`, limit 10, iterations 3: 70%
+  - qwen-3-32b / deepseek-r1-distill-llama-70b, limit 1, iterations 10: 100%
+  - qwen-3-32b / deepseek-r1-distill-llama-70b, limit 20, iterations 10: 95% ; =100 0000 tokens.
+  20/8500 problems, 10 instead of 100 iterations. 425*10 more tokens needed to do full gsm8k with 100 iterations => 425 000 000
+
+| Benchmark | Limit | Iterations | `llama-3.3-70b`/`llama-4-scout-17b-16e-instruct` | `llama3.1-8b`/`llama-4-scout-17b-16e-instruct` |
+|-----------|-------|------------|-----------------------------------------|-----------------------------------------------|
+| gsm8k     | 10    | 1          | ??                                      | 30.0%                                         |
+| gsm8k     | 10    | 2          | ??                                      | 40.0%                                         |
+| gsm8k     | 10    | 3          | ??                                      | 70.0%                                         |
+| gsm8k     | 10    | 10         | ??                                      | ??                                            |
+| gsm8k     | 10    | 15         | ??                                      | ??                                            |
+| gsm8k     | 5     | 100        | ??                                      | ??                                            |
+
+*Note: These early examples were meant to indicate that more evolution iterations might improve task performance, but the prompting may not be ideal yet.*
 
 ## Warning
 

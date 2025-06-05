@@ -1,9 +1,7 @@
-Evaluate the following answer on a scale of 0.0 to 1.0 for the following metrics:
+Evaluate the following answer on a scale of 0.0 (worst) to 1.0 (best) for the following metrics:
 1. Correctness: Is the answer factually correct?
 2. Task understanding: Did it capture the intent of the task well?
-3. Syntax: Is its syntax flawless?
-
-For each metric, provide a score between 0.0 and 1.0, where 1.0 is best.
+3. Syntax: Is its syntax flawless? If the task requires a natural language response but the current solution is code, rate this as 0. If examples are given in the task and the current solution is in a different format, rate as 0.
 
 Task:
 ```
