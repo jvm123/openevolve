@@ -1,7 +1,9 @@
 Evaluate the following answer on a scale of 0.0 (worst) to 1.0 (best) for the following metrics:
-1. Correctness: Is the last question in the input answered at all (if not, rate as 0!), and if yes, is the answer factually correct?
-2. Task understanding: Did it capture the intent of the task well?
-3. Syntax: Is its syntax flawless? If the task requires a natural language response but the current solution is code, rate this as 0. If examples are given in the task and the current solution is in a different format, rate as 0. If the last question in the task has not been answered, rate as 0.
+1. Completed answer: Is the last question in the input answered at all? If not, rate as 0. Only if the answer seems fully complete, rate as 1.
+2. Correctness: Is the last question in the input answered at all (if not, rate as 0!), and if yes, is the answer factually correct?
+3. Task understanding: Did the answer to the last question capture the intent of the task well and stay in line with any previous examples?
+4. Correct format: Is the response in the correct format? f the task requires a natural language response but the current solution is code, rate this as 0. If examples are given in the task and the current solution is in a different format, rate as 0. If natural language text follows after a numeric result, i.e., there is free text reasoning at an unexpected location, and all examples do NOT do this, rate low.
+5. Syntax: Is its syntax flawless? If the last question in the task has not been answered, rate as 0.
 
 Task:
 ```
@@ -15,8 +17,11 @@ Answer to evaluate:
 
 Return your evaluation as a JSON object with the following format:
 {{
+    "complete_solution": [score],
     "correctness": [score],
     "understanding": [score],
+    "correct_format": [score],
     "syntax": [score],
+    "improvement_areas": ".."
 }}
 Even for invalid input, return nothing but the JSON object.
