@@ -8,21 +8,23 @@ answer string.
 
 from __future__ import annotations
 import logging
-import subprocess, tempfile, json, os, argparse, math, pathlib
+import subprocess
+import json
+import os
+import argparse
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, Iterable
+from typing import List, Tuple, Any, Iterable, Optional
+from datetime import datetime
 
 import lm_eval
-from lm_eval.tasks import TaskManager
 from lm_eval.evaluator import evaluate
 from lm_eval.api.model import LM
 from lm_eval.api.registry import register_model
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# cd to the parent parent directory of this file
-os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Change working directory to project root
+os.chdir(Path(__file__).resolve().parents[2])
 
 PIPELINE_CMD = ["python3", "openevolve-run.py"]
 
@@ -56,9 +58,15 @@ class OpenEvolve(LM):
         self.prompt_path = os.path.join(base_path, self.PROMPT_REL_PATH)
         self.evaluator_prompt_path = os.path.join(base_path, self.EVALUATOR_PROMPT_REL_PATH)
         self.best_path = os.path.join(base_path, self.BEST_REL_PATH)
-        self.base_system_message = "" #"You are an expert task solver, with a lot of commonsense, math, language and coding knowledge.  You are in a test scenario and must solve tasks. Important: If the task does not clearly indicate that this is a coding exercise, assume it is a natural language task, and give a natural language response! Otherwise the benchmark would fail, for there is no automatic code execution! To succeed in the exercise, the answer must be in the same output format as in the examples in the task, and output nothing else. A dumb string match will measure your success."
+        self.base_system_message = ""  # "You are an expert task solver, with a lot of commonsense, math, language and coding knowledge.  You are in a test scenario and must solve tasks. Important: If the task does not clearly indicate that this is a coding exercise, assume it is a natural language task, and give a natural language response! Otherwise the benchmark would fail, for there is no automatic code execution! To succeed in the exercise, the answer must be in the same output format as in the examples in the task, and output nothing else. A dumb string match will measure your success."
 
-    def generate(self, prompts: List[str], max_gen_toks: int = None, stop=None, **kwargs):
+    def generate(
+        self,
+        prompts: List[str],
+        max_gen_toks: int = None,
+        stop: Optional[List[str]] = None,
+        **kwargs,
+    ) -> List[str]:
         outs = []
         total = len(prompts)
         for idx, prompt in enumerate(prompts, 1):
@@ -109,15 +117,27 @@ class OpenEvolve(LM):
         return outs
 
     # For tasks that ask for log likelihood, indicate that it is unsupported
-    def loglikelihood(self, requests: Iterable[Tuple[str, str]], **kw):
+    def loglikelihood(
+        self,
+        requests: Iterable[Tuple[str, str]],
+        **kw,
+    ) -> None:
         # return [(-math.inf, False) for _ in requests]
         raise NotImplementedError
 
-    def loglikelihood_rolling(self, requests: Iterable[str], **kw):
+    def loglikelihood_rolling(
+        self,
+        requests: Iterable[str],
+        **kw,
+    ) -> None:
         # return [(-math.inf, False) for _ in requests]
         raise NotImplementedError
 
-    def generate_until(self, requests: Iterable[Any], **kw) -> List[str]:
+    def generate_until(
+        self,
+        requests: Iterable[Any],
+        **kw,
+    ) -> List[str]:
         ctxs, stops = [], []
 
         for req in requests:
@@ -149,11 +169,9 @@ class OpenEvolve(LM):
         return cleaned
 
 
-if __name__ == "__main__":
+def main() -> None:
     # cli arguments for primary model, secondary model, iterations, config and tasks
-    p = argparse.ArgumentParser(
-        description="OpenEvolve <-> lm-evaluation-harness adapter.",
-    )
+    p = argparse.ArgumentParser(description="OpenEvolve <-> lm-evaluation-harness adapter.")
     p.add_argument("--config", default="examples/lm_eval/config.yml", help="config file")
     p.add_argument(
         "--init_file",
@@ -161,7 +179,9 @@ if __name__ == "__main__":
         help="Initial content file",
     )
     p.add_argument(
-        "--evaluator_file", default="examples/lm_eval/evaluator_stub.py", help="Evaluator program file"
+        "--evaluator_file",
+        default="examples/lm_eval/evaluator_stub.py",
+        help="Evaluator program file",
     )
     p.add_argument("--iterations", default=5, type=int, help="number of iterations")
     p.add_argument(
@@ -212,18 +232,10 @@ if __name__ == "__main__":
         limit=args.limit,
     )
 
-    # Write out the results
-    pathlib.Path(
-        args.output_path,
-    ).mkdir(exist_ok=True)
-
+    output_dir = Path(args.output_path)
+    output_dir.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_path = pathlib.Path(
-        os.path.join(
-            args.output_path,
-            f"{timestamp}_iter{args.iterations}.json",
-        )
-    )
+    results_path = output_dir / f"{timestamp}_iter{args.iterations}.json"
 
     with results_path.open("w") as f:
         json.dump(results, f, indent=2)
@@ -243,3 +255,7 @@ if __name__ == "__main__":
         logging.info(f"  {task:<15} {name:<12} {value:.3%}")
 
     logging.info("\nNote: Never cite the overall average when some components were skipped!")
+
+
+if __name__ == "__main__":
+    main()

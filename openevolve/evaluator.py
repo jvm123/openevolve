@@ -293,7 +293,8 @@ class Evaluator:
         try:
             # Create prompt for LLM
             prompt = self.prompt_sampler.build_prompt(
-                current_program=program_code, template_key="evaluation",
+                current_program=program_code,
+                template_key="evaluation",
                 initial_program=self.initial_program,
             )
 
