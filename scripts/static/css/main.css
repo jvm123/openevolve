@@ -244,23 +244,37 @@ a:hover {
     color: #3b5ca8;
 }
 .node-selected {
-    stroke: red;
-    stroke-width: 3px;
+    stroke: red !important;
+    stroke-width: 3px !important;
     transition: stroke 0.2s;
+    z-index: 10;
 }
 [data-theme="dark"] .node-selected {
-    stroke: red;
-    stroke-width: 3px;
+    stroke: red !important;
+    stroke-width: 3px !important;
+    z-index: 10;
 }
+.node-selected.node-hovered, .node-hovered.node-selected {
+    stroke: red !important;
+    stroke-width: 3px !important;
+}
+.node-selected.node-highlighted, .node-highlighted.node-selected {
+    stroke: red !important;
+    stroke-width: 3px !important;
+}
+
 .node-hovered {
     stroke: #FFD600;
     stroke-width: 4px;
     transition: stroke 0.1s;
+    z-index: 9;
 }
 [data-theme="dark"] .node-hovered {
     stroke: #FFD600;
     stroke-width: 4px;
+    z-index: 9;
 }
+
 .node-highlighted {
     stroke: #FFD600;
     stroke-width: 4px;
@@ -380,11 +394,12 @@ a:hover {
     box-shadow: 0 0 0 2px #2196f3;
     z-index: 2;
 }
-.node-list-item.selected.highlighted {
+.node-list-item.selected.highlighted, .node-list-item.highlighted.selected {
     border: 2.5px solid red !important;
     box-shadow: 0 0 0 2px #2196f3, 0 0 0 3px red;
     z-index: 4;
 }
+
 [data-theme="dark"] .node-list-item.selected {
     border: 2.5px solid red !important;
     box-shadow: 0 0 0 2px #00b4d8cc;

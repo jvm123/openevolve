@@ -340,26 +340,22 @@ function renderGraph(data) {
         })
         .on("dblclick", openInNewTab)
         .on("mouseover", function(event, d) {
-            if (!selectedProgramId) {
+            if (!selectedProgramId || selectedProgramId !== d.id) {
                 showSidebarContent(d);
                 showSidebar();
+                d3.select(this)
+                    .classed("node-hovered", true)
+                    .attr("stroke", "#FFD600").attr("stroke-width", 4);
             }
-            d3.select(this)
-                .classed("node-hovered", true)
-                .transition()
-                .duration(100)
-                .attr("stroke-width", 4);
         })
         .on("mouseout", function(event, d) {
-            if (!selectedProgramId) {
+            if (!selectedProgramId || selectedProgramId !== d.id) {
                 showSidebarContent(null);
+                d3.select(this)
+                    .classed("node-hovered", false)
+                    .attr("stroke", d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                    .attr("stroke-width", d => selectedProgramId === d.id ? 3 : 1.5);
             }
-            d3.select(this)
-                .classed("node-hovered", false)
-                .transition()
-                .duration(100)
-                .attr("stroke", getComputedStyle(document.documentElement).getPropertyValue('--node-stroke').trim() || "#fff")
-                .attr("stroke-width", 1.5);
         })
         .call(d3.drag()
             .on("start", dragstarted)
@@ -1034,7 +1030,7 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
                     .attr('opacity', 0.85)
                     .on('mouseover', function(event, d) {
-                        if (!selectedProgramId) {
+                        if (!selectedProgramId || selectedProgramId !== d.id) {
                             showSidebarContent(d);
                             showSidebar();
                         }
@@ -1043,12 +1039,13 @@ function updateListRowBackgroundsForTheme() {
                             .attr('stroke', '#FFD600').attr('stroke-width', 4);
                     })
                     .on('mouseout', function(event, d) {
-                        if (!selectedProgramId) {
+                        if (!selectedProgramId || selectedProgramId !== d.id) {
                             showSidebarContent(null);
+                            d3.select(this)
+                                .classed('node-hovered', false)
+                                .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                                .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5);
                         }
-                        d3.select(this)
-                            .classed('node-hovered', false)
-                            .attr('stroke', '#333').attr('stroke-width', 1.5);
                     })
                     .on('click', function(event, d) {
                         event.preventDefault();
@@ -1138,7 +1135,7 @@ function updateListRowBackgroundsForTheme() {
             .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
             .attr('opacity', 0.85)
             .on('mouseover', function(event, d) {
-                if (!selectedProgramId) {
+                if (!selectedProgramId || selectedProgramId !== d.id) {
                     showSidebarContent(d);
                     showSidebar();
                 }
@@ -1147,12 +1144,13 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke', '#FFD600').attr('stroke-width', 4);
             })
             .on('mouseout', function(event, d) {
-                if (!selectedProgramId) {
+                if (!selectedProgramId || selectedProgramId !== d.id) {
                     showSidebarContent(null);
+                    d3.select(this)
+                        .classed('node-hovered', false)
+                        .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                        .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5);
                 }
-                d3.select(this)
-                    .classed('node-hovered', false)
-                    .attr('stroke', '#333').attr('stroke-width', 1.5);
             })
             .on('click', function(event, d) {
                 event.preventDefault();
