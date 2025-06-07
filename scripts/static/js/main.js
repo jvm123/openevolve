@@ -138,11 +138,31 @@ function getSelectedMetric() {
 }
 
 function getNodeRadius(d) {
-    let minScore = 0, maxScore = 1;
+    // Find min and max metric values in the dataset
+    let minScore = Infinity, maxScore = -Infinity;
     let minR = 10, maxR = 32;
     const metric = getSelectedMetric();
+
+    if (Array.isArray(allNodeData) && allNodeData.length > 0) {
+        allNodeData.forEach(n => {
+            if (n.metrics && typeof n.metrics[metric] === "number") {
+                if (n.metrics[metric] < minScore) minScore = n.metrics[metric];
+                if (n.metrics[metric] > maxScore) maxScore = n.metrics[metric];
+            }
+        });
+        if (minScore === Infinity) minScore = 0;
+        if (maxScore === -Infinity) maxScore = 1;
+    } else {
+        minScore = 0;
+        maxScore = 1;
+    }
+
     let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
-    if (score === null) return minR;
+    if (score === null || isNaN(score)) {
+        return minR / 2;
+    }
+    // Prevent division by zero
+    if (maxScore === minScore) return (minR + maxR) / 2;
     score = Math.max(minScore, Math.min(maxScore, score));
     return minR + (maxR - minR) * (score - minScore) / (maxScore - minScore);
 }
@@ -175,6 +195,11 @@ function renderGraph(data) {
         .enter().append("line")
         .attr("stroke-width", 2);
 
+    const metric = getSelectedMetric();
+    const highlightFilter = document.getElementById('highlight-select').value;
+    const highlightNodes = getHighlightNodes(data.nodes, highlightFilter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+
     const node = g.append("g")
         .attr("stroke", getComputedStyle(document.documentElement).getPropertyValue('--node-stroke').trim() || "#fff")
         .attr("stroke-width", 1.5)
@@ -183,6 +208,10 @@ function renderGraph(data) {
         .enter().append("circle")
         .attr("r", d => getNodeRadius(d))
         .attr("fill", d => getNodeColor(d))
+        .attr("class", d => [
+            highlightIds.has(d.id) ? 'node-highlighted' : '',
+            selectedProgramId === d.id ? 'node-selected' : ''
+        ].join(' ').trim())
         .on("click", function(event, d) {
             selectedProgramId = d.id;
             showSidebarContent(d);
@@ -287,10 +316,15 @@ function renderNodeList(nodes) {
     } else if (sort === 'island') {
         filtered = filtered.slice().sort((a, b) => (a.island || 0) - (b.island || 0));
     }
+    // Highlight logic for list view
+    const metric = getSelectedMetric();
+    const highlightFilter = document.getElementById('highlight-select').value;
+    const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
     container.innerHTML = '';
     filtered.forEach(node => {
         const div = document.createElement('div');
-        div.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '');
+        div.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
         div.innerHTML =
             `<b>ID:</b> ${node.id}<br>` +
             `<b>Gen:</b> ${node.generation ?? ''} &nbsp; <b>Island:</b> ${node.island ?? ''}<br>` +
@@ -331,7 +365,9 @@ function fetchAndRender() {
                 "Checkpoint: " + data.checkpoint_dir;
             // update metric-select options. keep the selected option.
             const metricSelect = document.getElementById('metric-select');
-            const currentValue = metricSelect.value;
+            const highlightSelect = document.getElementById('highlight-select');
+            const currentMetric = metricSelect.value;
+            const currentHighlight = highlightSelect.value;
             metricSelect.innerHTML = '';
             const metrics = new Set();
             data.nodes.forEach(node => {
@@ -348,6 +384,20 @@ function fetchAndRender() {
             if (metricSelect.options.length > 0) {
                 metricSelect.selectedIndex = 0;
             }
+            // Update highlight-select options
+            highlightSelect.innerHTML = '';
+            [
+                { value: 'top', label: 'Top score' },
+                { value: 'first', label: 'First generation' },
+                { value: 'failed', label: 'Failed' },
+                { value: 'unset', label: 'Metric unset' }
+            ].forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.label;
+                highlightSelect.appendChild(option);
+            });
+            highlightSelect.value = currentHighlight || 'top';
         });
 }
 fetchAndRender();
@@ -371,3 +421,38 @@ document.getElementById('metric-select').addEventListener('change', function() {
             renderGraph(data);
         });
 });
+
+// Highlight logic for graph and list views
+function getHighlightNodes(nodes, filter, metric) {
+    if (!filter) return [];
+    if (filter === 'top') {
+        // Top score for selected metric
+        let best = -Infinity;
+        nodes.forEach(n => {
+            if (n.metrics && typeof n.metrics[metric] === 'number') {
+                if (n.metrics[metric] > best) best = n.metrics[metric];
+            }
+        });
+        return nodes.filter(n => n.metrics && n.metrics[metric] === best);
+    } else if (filter === 'first') {
+        return nodes.filter(n => n.generation === 1);
+    } else if (filter === 'failed') {
+        return nodes.filter(n => n.metrics && n.metrics.error != null);
+    } else if (filter === 'unset') {
+        return nodes.filter(n => !n.metrics || n.metrics[metric] == null);
+    }
+    return [];
+}
+
+// Switch metric-select and highlight-select order in the toolbar
+(function() {
+    const toolbar = document.getElementById('toolbar');
+    const metricSelect = document.getElementById('metric-select');
+    const highlightSelect = document.getElementById('highlight-select');
+    if (toolbar && metricSelect && highlightSelect) {
+        // Move metric-select before highlight-select
+        if (highlightSelect.previousElementSibling !== metricSelect) {
+            toolbar.insertBefore(metricSelect, highlightSelect);
+        }
+    }
+})();

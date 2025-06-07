@@ -18,6 +18,10 @@
             <div class="tab" id="tab-performance">Performance</div>
             <div class="tab" id="tab-prompts">Prompts</div>
         </div>
+        <label class="toolbar-label" for="metric-select" style="margin-left:2em;">Metric:</label>
+        <select id="metric-select" style="font-size:1em;margin-left:0.5em;">
+            <option value="combined_score" selected>combined_score</option>
+        </select>
         <label class="toolbar-label" for="highlight-select"
                style="margin-left:2em;">
             Highlight:
@@ -26,10 +30,6 @@
             <option value="best" selected>Best</option>
             <option value="first">First</option>
             <option value="failed">Failed</option>
-        </select>
-        <label class="toolbar-label" for="metric-select" style="margin-left:2em;">Metric:</label>
-        <select id="metric-select" style="font-size:1em;margin-left:0.5em;">
-            <option value="combined_score" selected>combined_score</option>
         </select>
         <div style="margin-left:auto;display:flex;align-items:center;cursor:pointer;gap:0.3em;min-width:120px;">
             <label style="margin:0;display:flex;align-items:center;gap:0.3em;">Dark mode:</label>

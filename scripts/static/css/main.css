@@ -192,12 +192,12 @@ a:hover {
     color: #3b5ca8;
 }
 .node-selected {
-    stroke: #000;
+    stroke: red;
     stroke-width: 3px;
     transition: stroke 0.2s;
 }
 [data-theme="dark"] .node-selected {
-    stroke: #3b5ca8;
+    stroke: red;
     stroke-width: 3px;
 }
 .node-hovered {
@@ -205,14 +205,35 @@ a:hover {
     stroke-width: 4px;
     transition: stroke 0.1s;
 }
-[data-theme="dark"] .node-selected {
-    stroke: #3b5ca8;
-    stroke-width: 3px;
-}
 [data-theme="dark"] .node-hovered {
     stroke: #FFD600;
     stroke-width: 4px;
 }
+.node-highlighted {
+    stroke: #FFD600;
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 10px #FFD60088);
+    transition: stroke 0.2s, filter 0.2s;
+}
+[data-theme="dark"] .node-highlighted {
+    stroke: #00b4d8;
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 12px #00b4d8cc);
+}
+
+/* Highlighted node for filter (graph view) */
+.node-highlighted {
+    filter: drop-shadow(0 0 8px #2196f3) drop-shadow(0 0 16px #2196f3);
+    stroke: #2196f3;
+    stroke-width: 4px;
+    transition: filter 0.2s, stroke 0.2s;
+}
+[data-theme="dark"] .node-highlighted {
+    filter: drop-shadow(0 0 10px #00b4d8) drop-shadow(0 0 20px #00b4d8);
+    stroke: #00b4d8;
+    stroke-width: 4px;
+}
+
 @media (max-width: 1200px) {
     #toolbar {
         flex-wrap: wrap;
@@ -302,6 +323,11 @@ a:hover {
     box-shadow: 0 4px 16px #FFD60044;
     z-index: 2;
 }
+.node-list-item.highlighted {
+    border: 2.5px solid #2196f3;
+    box-shadow: 0 0 12px #2196f388;
+    z-index: 3;
+}
 [data-theme="dark"] .node-list-item {
     border: 1.5px solid #3b5ca8;
     background: #23272a;
@@ -314,6 +340,11 @@ a:hover {
 [data-theme="dark"] .node-list-item:hover {
     border: 2px solid #FFD600;
     box-shadow: 0 4px 16px #FFD60044;
+}
+[data-theme="dark"] .node-list-item.highlighted {
+    border: 2.5px solid #00b4d8;
+    box-shadow: 0 0 16px #00b4d888;
+    background: #1e2633;
 }
 
 #list-search {
