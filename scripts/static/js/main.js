@@ -653,3 +653,149 @@ function updateListRowBackgroundsForTheme() {
         }
     });
 }
+
+// --- Performance Tab D3 Graph ---
+(function() {
+    const perfDiv = document.getElementById('view-performance');
+    if (!perfDiv) return;
+    d3.select('#performance-graph').remove();
+    perfDiv.style.overflowY = 'auto';
+    perfDiv.style.position = 'relative';
+    function renderPerformanceGraph(nodes) {
+        d3.select('#performance-graph').remove();
+        // Calculate width: window width - sidebar width - padding
+        const sidebarEl = document.getElementById('sidebar');
+        const padding = 32;
+        const windowWidth = window.innerWidth;
+        const sidebarWidth = sidebarEl.offsetWidth || 400;
+        const width = Math.max(windowWidth - sidebarWidth - padding, 400);
+        // X: metric, Y: generation (downwards, open-ended)
+        const metric = getSelectedMetric();
+        const validNodes = nodes.filter(n => n.metrics && typeof n.metrics[metric] === 'number');
+        if (!validNodes.length) return;
+        // Always start with generation 0
+        const yExtent = d3.extent(validNodes, d => d.generation);
+        const minGen = 0;
+        const maxGen = yExtent[1];
+        const xExtent = d3.extent(validNodes, d => d.metrics[metric]);
+        const margin = {top: 60, right: 40, bottom: 40, left: 60};
+        const genCount = (maxGen - minGen + 1) || 1;
+        const height = Math.max(400, genCount * 48 + margin.top + margin.bottom);
+        const svg = d3.select(perfDiv)
+            .append('svg')
+            .attr('id', 'performance-graph')
+            .attr('width', width)
+            .attr('height', height)
+            .style('display', 'block');
+        const x = d3.scaleLinear()
+            .domain([xExtent[0], xExtent[1]]).nice()
+            .range([margin.left, width - margin.right]);
+        const y = d3.scaleLinear()
+            .domain([minGen, maxGen]).nice()
+            .range([margin.top, height - margin.bottom]);
+        // Axes
+        svg.append('g')
+            .attr('transform', `translate(0,${margin.top})`)
+            .call(d3.axisTop(x))
+            .append('text')
+            .attr('x', width/2)
+            .attr('y', -35)
+            .attr('fill', '#888')
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '1.1em')
+            .text(metric);
+        svg.append('g')
+            .attr('transform', `translate(${margin.left},0)`)
+            .call(d3.axisLeft(y).ticks(Math.min(12, genCount)))
+            .append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('x', -height/2)
+            .attr('y', -45)
+            .attr('fill', '#888')
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '1.1em')
+            .text('Generation');
+        // Highlight logic (same as branching)
+        const highlightFilter = document.getElementById('highlight-select').value;
+        const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
+        const highlightIds = new Set(highlightNodes.map(n => n.id));
+        // Draw nodes as circles
+        svg.append('g')
+            .selectAll('circle')
+            .data(validNodes)
+            .enter()
+            .append('circle')
+            .attr('cx', d => x(d.metrics[metric]))
+            .attr('cy', d => y(d.generation))
+            .attr('r', d => getNodeRadius(d))
+            .attr('fill', d => getNodeColor(d))
+            .attr('class', d => [
+                highlightIds.has(d.id) ? 'node-highlighted' : '',
+                selectedProgramId === d.id ? 'node-selected' : ''
+            ].join(' ').trim())
+            .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+            .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+            .attr('opacity', 0.85)
+            .on('mouseover', function(event, d) {
+                if (selectedProgramId === d.id) return; // Do not apply hover if selected
+                showSidebarContent(d);
+                showSidebar();
+                d3.select(this)
+                    .classed('node-hovered', true)
+                    .attr('stroke', '#FFD600').attr('stroke-width', 4);
+            })
+            .on('mouseout', function(event, d) {
+                if (selectedProgramId === d.id) return; // Do not revert if selected
+                showSidebarContent(null);
+                d3.select(this)
+                    .classed('node-hovered', false)
+                    .attr('stroke', '#333').attr('stroke-width', 1.5);
+            })
+            .on('click', function(event, d) {
+                selectedProgramId = d.id;
+                window._lastSelectedNodeData = d;
+                showSidebarContent(d);
+                showSidebar();
+                selectProgram(selectedProgramId);
+                renderPerformanceGraph(nodes);
+            });
+        // Unselect logic: click background to unselect
+        svg.on('click', function(event) {
+            if (event.target === svg.node()) {
+                selectedProgramId = null;
+                showSidebarContent(null);
+                svg.selectAll('circle')
+                    .classed('node-selected', false)
+                    .classed('node-hovered', false)
+                    .attr('stroke', '#333')
+                    .attr('stroke-width', 1.5);
+            }
+        });
+    }
+    // Hook into fetchAndRender to update performance graph
+    const origFetchAndRender = fetchAndRender;
+    fetchAndRender = function() {
+        origFetchAndRender.apply(this, arguments);
+        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            renderPerformanceGraph(allNodeData);
+        }
+    };
+    // Also update on metric or highlight change
+    const metricSelect = document.getElementById('metric-select');
+    metricSelect.addEventListener('change', function() {
+        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            renderPerformanceGraph(allNodeData);
+        }
+    });
+    const highlightSelect = document.getElementById('highlight-select');
+    highlightSelect.addEventListener('change', function() {
+        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            renderPerformanceGraph(allNodeData);
+        }
+    });
+    document.getElementById('tab-performance').addEventListener('click', function() {
+        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            renderPerformanceGraph(allNodeData);
+        }
+    });
+})();

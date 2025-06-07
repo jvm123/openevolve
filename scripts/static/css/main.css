@@ -63,7 +63,7 @@ h1 span { font-size: 0.5em; color: #666; }
     right: 0;
     height: 3.5em;
     box-sizing: border-box;
-    /* Restore blue shadow in dark mode */
+    box-shadow: 0 4px 16px #aaa;
 }
 [data-theme="dark"] #toolbar {
     background: #1a222c;
