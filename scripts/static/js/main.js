@@ -934,8 +934,8 @@ function updateListRowBackgroundsForTheme() {
         const maxGen = yExtent[1];
         const xExtent = d3.extent(validNodes, d => d.metrics[metric]);
         const margin = {top: 60, right: 40, bottom: 40, left: 60};
-        let undefinedBoxWidth = 140; // wider for NaN label
-        const undefinedBoxPad = 36; // increased gap for y-axis (was 12)
+        let undefinedBoxWidth = 70; // reduced width
+        const undefinedBoxPad = 54; // increased gap for y-axis
         const genCount = (maxGen - minGen + 1) || 1;
         // Height: one graph per island if split, else one
         const graphHeight = Math.max(400, genCount * 48 + margin.top + margin.bottom);
@@ -971,6 +971,16 @@ function updateListRowBackgroundsForTheme() {
             g.append('g')
                 .attr('transform', `translate(${margin.left+graphXOffset},0)`)
                 .call(d3.axisLeft(y).ticks(Math.min(12, genCount)));
+            // Y axis label (add only for first island or for each if split)
+            g.append('text')
+                .attr('transform', `rotate(-90)`)
+                .attr('y', margin.left + 8)
+                .attr('x', -(margin.top + i*graphHeight + (graphHeight - margin.top - margin.bottom)/2))
+                .attr('dy', '-2.2em')
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '1em')
+                .attr('fill', '#888')
+                .text('Generation');
             // Add headline for each island (move further down)
             if (showIslands) {
                 g.append('text')
@@ -1000,22 +1010,26 @@ function updateListRowBackgroundsForTheme() {
             .text(metric);
         // Draw single NaN box (left of graph, spanning all islands)
         if (undefinedNodes.length) {
+            // Make the NaN box narrower and transparent, with more gap to the graph
+            let undefinedBoxWidth = 70; // reduced width
+            const undefinedBoxPad = 54; // increased gap for y-axis
             const boxTop = margin.top;
             const boxBottom = showIslands ? (margin.top + islands.length*graphHeight - margin.bottom) : (margin.top + graphHeight - margin.bottom);
-            // NaN label above the box, centered
+            // NaN label above the box, centered, smaller font
             g.append('text')
                 .attr('x', margin.left + undefinedBoxWidth/2)
                 .attr('y', boxTop - 10)
                 .attr('text-anchor', 'middle')
-                .attr('font-size', '1.08em')
+                .attr('font-size', '0.92em') // smaller font
                 .attr('fill', '#888')
                 .text('NaN');
+            // Transparent box (no fill, only border)
             g.append('rect')
                 .attr('x', margin.left)
                 .attr('y', boxTop)
                 .attr('width', undefinedBoxWidth)
                 .attr('height', boxBottom - boxTop)
-                .attr('fill', '#f5f5f5')
+                .attr('fill', 'none')
                 .attr('stroke', '#bbb')
                 .attr('stroke-width', 1.5)
                 .attr('rx', 12);
