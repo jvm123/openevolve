@@ -4,8 +4,8 @@ import { showSidebar, setSidebarSticky, showSidebarContent } from './sidebar.js'
 import { selectProgram, scrollAndSelectNodeById } from './graph.js';
 
 // Node list rendering and logic
-function getNodeGray(d, minGray = 120, maxGray = 230) {
-    // minGray: darkest, maxGray: lightest (0-255)
+function getNodeBackgroundLight(d, min = 120, max = 230) {
+    // min: darkest, max: lightest (0-255)
     // Invert logic: better scores are lighter
     let minScore = Infinity, maxScore = -Infinity;
     const metric = getSelectedMetric();
@@ -25,20 +25,20 @@ function getNodeGray(d, minGray = 120, maxGray = 230) {
     let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
     // If no score, use the darkest color (worst)
     if (score === null || isNaN(score)) {
-        return `rgb(${minGray},${minGray},${minGray})`;
+        return `rgb(${min},${min},${min})`;
     }
     if (maxScore === minScore) {
-        const g = Math.round((minGray+maxGray)/2);
+        const g = Math.round((min+max)/2);
         return `rgb(${g},${g},${g})`;
     }
     // Invert: higher score = lighter
-    const gray = Math.round(maxGray - (maxGray - minGray) * (maxScore - score) / (maxScore - minScore));
-    return `rgb(${gray},${gray},${gray})`;
+    const val = Math.round(max - (max - min) * (maxScore - score) / (maxScore - minScore));
+    return `rgb(${val},${val},${val})`;
 }
 
-// For dark mode, update backgrounds using a blue-gray scale and same logic
-function getNodeGrayDark(d, minGray = 40, maxGray = 120) {
-    // minGray: darkest, maxGray: lightest (0-255)
+// For dark mode, update backgrounds using a blue-tinted scale and same logic
+function getNodeBackgroundDark(d, min = 40, max = 120) {
+    // min: darkest, max: lightest (0-255)
     let minScore = Infinity, maxScore = -Infinity;
     const metric = getSelectedMetric();
     if (Array.isArray(allNodeData) && allNodeData.length > 0) {
@@ -57,15 +57,15 @@ function getNodeGrayDark(d, minGray = 40, maxGray = 120) {
     let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
     // If no score, use the darkest color (worst)
     if (score === null || isNaN(score)) {
-        return `rgb(${minGray},${minGray+10},${minGray+20})`;
+        return `rgb(${min},${min+10},${min+20})`;
     }
     if (maxScore === minScore) {
-        const g = Math.round((minGray+maxGray)/2);
+        const g = Math.round((min+max)/2);
         return `rgb(${g},${g+10},${g+20})`;
     }
     // Invert: higher score = lighter
-    const gray = Math.round(maxGray - (maxGray - minGray) * (maxScore - score) / (maxScore - minScore));
-    return `rgb(${gray},${gray+10},${gray+20})`;
+    const val = Math.round(max - (max - min) * (maxScore - score) / (maxScore - minScore));
+    return `rgb(${val},${val+10},${val+20})`;
 }
 
 // Update node list row backgrounds for current theme/metric/highlight
@@ -85,7 +85,7 @@ export function updateListRowBackgroundsForTheme() {
         const node = allNodeData.find(n => n.id == nodeId);
         if (node) {
             // Use inline style with !important to override CSS background
-            div.style.setProperty('background', isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230), 'important');
+            div.style.setProperty('background', isDark ? getNodeBackgroundDark(node, 40, 120) : getNodeBackgroundLight(node, 120, 230), 'important');
             div.classList.toggle('highlighted', highlightIds.has(nodeId));
         }
     });

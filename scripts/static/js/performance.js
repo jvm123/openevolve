@@ -12,7 +12,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
     if (!toggleDiv) {
         toggleDiv = document.createElement('div');
         toggleDiv.id = 'perf-island-toggle';
-        toggleDiv.style = 'margin-bottom:1em;display:flex;align-items:center;gap:0.7em;';
+        toggleDiv.style = 'margin:0 0 1em 1em;display:flex;align-items:center;gap:0.7em;';
         toggleDiv.innerHTML = `
         <label class="toggle-switch" style="margin-right:0.7em;">
             <input type="checkbox" id="show-islands-toggle">
@@ -347,23 +347,19 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             perfSummary.className = 'list-summary-bar';
             perfDiv.insertBefore(perfSummary, perfDiv.firstChild);
         }
-        perfSummary.style.paddingTop = '';
+        perfSummary.style.paddingTop = '2.2em';
         perfSummary.innerHTML = `
-          <div class="summary-block" style="display:flex;align-items:center;gap:1.2em;min-width:220px;">
+          <div class="summary-block">
             <span class="summary-icon">🏆</span>
-            <span style="display:flex;align-items:center;gap:0.7em;width:100%;">
-              <span class="summary-label" style="min-width:90px;text-align:left;">Top score</span>
-              <span class="summary-value" style="min-width:90px;text-align:right;">${topScore.toFixed(4)}</span>
-              <span style="flex:1;min-width:90px;">${renderMetricBar(topScore, minScore, maxScore)}</span>
-            </span>
+            <span class="summary-label">Top score</span>
+            <span class="summary-value">${topScore.toFixed(4)}</span>
+            ${renderMetricBar(topScore, minScore, maxScore)}
           </div>
-          <div class="summary-block" style="display:flex;align-items:center;gap:1.2em;min-width:220px;">
+          <div class="summary-block">
             <span class="summary-icon">📊</span>
-            <span style="display:flex;align-items:center;gap:0.7em;width:100%;">
-              <span class="summary-label" style="min-width:90px;text-align:left;">Average</span>
-              <span class="summary-value" style="min-width:90px;text-align:right;">${avgScore.toFixed(4)}</span>
-              <span style="flex:1;min-width:90px;">${renderMetricBar(avgScore, minScore, maxScore)}</span>
-            </span>
+            <span class="summary-label">Average</span>
+            <span class="summary-value">${avgScore.toFixed(4)}</span>
+            ${renderMetricBar(avgScore, minScore, maxScore)}
           </div>
         `;
     }
