@@ -909,8 +909,12 @@ function updateListRowBackgroundsForTheme() {
         const sidebarEl = document.getElementById('sidebar');
         const padding = 32;
         const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const toolbarHeight = document.getElementById('toolbar').offsetHeight;
         const sidebarWidth = sidebarEl.offsetWidth || 400;
+        // Always fill available window (minus sidebar and padding)
         const width = Math.max(windowWidth - sidebarWidth - padding, 400);
+        const height = Math.max(windowHeight - toolbarHeight - 24, 400); // 24 for some margin
         // X: metric, Y: generation (downwards, open-ended)
         const metric = getSelectedMetric();
         const validNodes = nodes.filter(n => n.metrics && typeof n.metrics[metric] === 'number');
@@ -930,16 +934,22 @@ function updateListRowBackgroundsForTheme() {
         const maxGen = yExtent[1];
         const xExtent = d3.extent(validNodes, d => d.metrics[metric]);
         const margin = {top: 60, right: 40, bottom: 40, left: 60};
-        const undefinedBoxWidth = 120; // width for undefined score box
+        let undefinedBoxWidth = 140; // wider for NaN label
+        const undefinedBoxPad = 36; // increased gap for y-axis (was 12)
         const genCount = (maxGen - minGen + 1) || 1;
         // Height: one graph per island if split, else one
         const graphHeight = Math.max(400, genCount * 48 + margin.top + margin.bottom);
-        const height = showIslands ? (graphHeight * islands.length) : graphHeight;
+        // If window is tall, use all available height
+        const totalGraphHeight = showIslands ? (graphHeight * islands.length) : graphHeight;
+        // If window is taller, stretch graph to fill
+        const svgHeight = Math.max(height, totalGraphHeight);
+        // Move graph and y-axis further right to avoid overlap
+        const graphXOffset = undefinedBoxWidth + undefinedBoxPad;
         const svg = d3.select(perfDiv)
             .append('svg')
             .attr('id', 'performance-graph')
             .attr('width', width)
-            .attr('height', height)
+            .attr('height', svgHeight)
             .style('display', 'block');
         // --- ZOOM/DRAG SUPPORT ---
         const g = svg.append('g').attr('class', 'zoom-group');
@@ -957,15 +967,15 @@ function updateListRowBackgroundsForTheme() {
                 .domain([minGen, maxGen]).nice()
                 .range([margin.top + i*graphHeight, margin.top + (i+1)*graphHeight - margin.bottom]);
             yScales[island] = y;
-            // Axis
+            // Axis (move right)
             g.append('g')
-                .attr('transform', `translate(${margin.left+undefinedBoxWidth},0)`)
+                .attr('transform', `translate(${margin.left+graphXOffset},0)`)
                 .call(d3.axisLeft(y).ticks(Math.min(12, genCount)));
-            // Add headline for each island (now inside the graph area)
+            // Add headline for each island (move further down)
             if (showIslands) {
                 g.append('text')
                     .attr('x', (width + undefinedBoxWidth) / 2)
-                    .attr('y', margin.top + i*graphHeight + 8)
+                    .attr('y', margin.top + i*graphHeight + 38)
                     .attr('text-anchor', 'middle')
                     .attr('font-size', '2.1em')
                     .attr('font-weight', 700)
@@ -974,10 +984,10 @@ function updateListRowBackgroundsForTheme() {
                     .text(`Island ${island}`);
             }
         });
-        // X axis (shared)
+        // X axis (shared, move right)
         const x = d3.scaleLinear()
             .domain([xExtent[0], xExtent[1]]).nice()
-            .range([margin.left+undefinedBoxWidth, width - margin.right]);
+            .range([margin.left+graphXOffset, width - margin.right]);
         g.append('g')
             .attr('transform', `translate(0,${margin.top})`)
             .call(d3.axisTop(x))
@@ -988,75 +998,69 @@ function updateListRowBackgroundsForTheme() {
             .attr('text-anchor', 'middle')
             .attr('font-size', '1.1em')
             .text(metric);
-        // Draw undefined score box (left of graph)
+        // Draw single NaN box (left of graph, spanning all islands)
         if (undefinedNodes.length) {
-            islands.forEach((island, i) => {
-                // Only show undefined nodes for this island (or all if not split)
-                const theseNodes = showIslands ? undefinedNodes.filter(n => n.island === island) : undefinedNodes;
-                if (!theseNodes.length) return;
-                // Draw box
-                const y = yScales[island];
-                const boxTop = margin.top + i*graphHeight;
-                const boxBottom = margin.top + (i+1)*graphHeight - margin.bottom;
-                g.append('rect')
-                    .attr('x', margin.left)
-                    .attr('y', boxTop)
-                    .attr('width', undefinedBoxWidth)
-                    .attr('height', boxBottom - boxTop)
-                    .attr('fill', '#f5f5f5')
-                    .attr('stroke', '#bbb')
-                    .attr('stroke-width', 1.5)
-                    .attr('rx', 12);
-                // Label
-                g.append('text')
-                    .attr('x', margin.left + undefinedBoxWidth/2)
-                    .attr('y', boxTop + 24)
-                    .attr('text-anchor', 'middle')
-                    .attr('font-size', '1.08em')
-                    .attr('fill', '#888')
-                    .text('undefined score');
-                // Draw nodes in box, vertically by generation
-                g.append('g')
-                    .selectAll('circle')
-                    .data(theseNodes)
-                    .enter()
-                    .append('circle')
-                    .attr('cx', margin.left + undefinedBoxWidth/2)
-                    .attr('cy', d => y(d.generation))
-                    .attr('r', d => getNodeRadius(d))
-                    .attr('fill', d => getNodeColor(d))
-                    .attr('class', d => [selectedProgramId === d.id ? 'node-selected' : ''].join(' ').trim())
-                    .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
-                    .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
-                    .attr('opacity', 0.85)
-                    .on('mouseover', function(event, d) {
-                        if (!selectedProgramId || selectedProgramId !== d.id) {
-                            showSidebarContent(d);
-                            showSidebar();
-                        }
-                        d3.select(this)
-                            .classed('node-hovered', true)
-                            .attr('stroke', '#FFD600').attr('stroke-width', 4);
-                    })
-                    .on('mouseout', function(event, d) {
-                        if (!selectedProgramId || selectedProgramId !== d.id) {
-                            showSidebarContent(null);
-                            d3.select(this)
-                                .classed('node-hovered', false)
-                                .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
-                                .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5);
-                        }
-                    })
-                    .on('click', function(event, d) {
-                        event.preventDefault();
-                        selectedProgramId = d.id;
-                        window._lastSelectedNodeData = d;
+            const boxTop = margin.top;
+            const boxBottom = showIslands ? (margin.top + islands.length*graphHeight - margin.bottom) : (margin.top + graphHeight - margin.bottom);
+            // NaN label above the box, centered
+            g.append('text')
+                .attr('x', margin.left + undefinedBoxWidth/2)
+                .attr('y', boxTop - 10)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '1.08em')
+                .attr('fill', '#888')
+                .text('NaN');
+            g.append('rect')
+                .attr('x', margin.left)
+                .attr('y', boxTop)
+                .attr('width', undefinedBoxWidth)
+                .attr('height', boxBottom - boxTop)
+                .attr('fill', '#f5f5f5')
+                .attr('stroke', '#bbb')
+                .attr('stroke-width', 1.5)
+                .attr('rx', 12);
+            // Draw all NaN nodes in the box, always centered horizontally
+            let xNaN = margin.left + undefinedBoxWidth/2;
+            g.append('g')
+                .selectAll('circle')
+                .data(undefinedNodes)
+                .enter()
+                .append('circle')
+                .attr('cx', xNaN)
+                .attr('cy', d => yScales[showIslands ? d.island : null](d.generation))
+                .attr('r', d => getNodeRadius(d))
+                .attr('fill', d => getNodeColor(d))
+                .attr('class', d => [selectedProgramId === d.id ? 'node-selected' : ''].join(' ').trim())
+                .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+                .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+                .attr('opacity', 0.85)
+                .on('mouseover', function(event, d) {
+                    if (!selectedProgramId || selectedProgramId !== d.id) {
                         showSidebarContent(d);
                         showSidebar();
-                        selectProgram(selectedProgramId);
-                        renderPerformanceGraph(nodes);
-                    });
-            });
+                    }
+                    d3.select(this)
+                        .classed('node-hovered', true)
+                        .attr('stroke', '#FFD600').attr('stroke-width', 4);
+                })
+                .on('mouseout', function(event, d) {
+                    if (!selectedProgramId || selectedProgramId !== d.id) {
+                        showSidebarContent(null);
+                        d3.select(this)
+                            .classed('node-hovered', false)
+                            .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                            .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5);
+                    }
+                })
+                .on('click', function(event, d) {
+                    event.preventDefault();
+                    selectedProgramId = d.id;
+                    window._lastSelectedNodeData = d;
+                    showSidebarContent(d);
+                    showSidebar();
+                    selectProgram(selectedProgramId);
+                    renderPerformanceGraph(nodes);
+                });
         }
         // Highlight logic (same as branching)
         const highlightFilter = document.getElementById('highlight-select').value;
