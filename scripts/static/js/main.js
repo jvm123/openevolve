@@ -54,11 +54,100 @@ tabs.forEach(tab => {
 
 // Sidebar logic (automatic show/hide)
 const sidebar = document.getElementById('sidebar');
+let sidebarSticky = false; // Track if sidebar should be sticky (after selection)
+
 function showSidebar() {
     sidebar.style.transform = 'translateX(0)';
 }
 function hideSidebar() {
     sidebar.style.transform = 'translateX(100%)';
+    sidebarSticky = false;
+    showSidebarContent(null);
+}
+
+// Patch showSidebarContent to only update content on selection, not hover
+function showSidebarContent(d, fromHover = false) {
+    const sidebarContent = document.getElementById('sidebar-content');
+    if (!sidebarContent) return;
+    // Only allow hover to update content if sidebar is not sticky
+    if (fromHover && sidebarSticky) return;
+    if (!d) {
+        sidebarContent.innerHTML = '';
+        return;
+    }
+    // Star for MAP-Elite archive
+    let starHtml = '';
+    if (archiveProgramIds && archiveProgramIds.includes(d.id)) {
+        starHtml = '<span style="position:absolute;top:0.2em;left:0.5em;font-size:1.5em;color:#FFD600;z-index:10;">★</span>';
+    }
+    // X button for closing sidebar (tighter in the corner)
+    let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:0.2em;right:0.5em;font-size:1.5em;background:none;border:none;color:#888;cursor:pointer;z-index:10;line-height:1;">&times;</button>';
+    // Centered open link
+    let openLink = '<div style="text-align:center;margin:0.5em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a></div>';
+    // Tab logic for code/prompts
+    let tabHtml = '';
+    let tabContentHtml = '';
+    let tabNames = [];
+    if (d.code && typeof d.code === 'string' && d.code.trim() !== '') tabNames.push('Code');
+    if (d.prompts && typeof d.prompts === 'object' && Object.keys(d.prompts).length > 0) tabNames.push('Prompts');
+    if (tabNames.length > 0) {
+        tabHtml = '<div id="sidebar-tab-bar" style="display:flex;gap:0.7em;margin-bottom:0.7em;">' +
+            tabNames.map((name, i) => `<span class="sidebar-tab${i===0?' active':''}" data-tab="${name}">${name}</span>`).join('') + '</div>';
+        tabContentHtml = '<div id="sidebar-tab-content">';
+        if (tabNames[0] === 'Code') tabContentHtml += `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${d.code}</pre>`;
+        if (tabNames[0] === 'Prompts') tabContentHtml += `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${JSON.stringify(d.prompts, null, 2)}</pre>`;
+        tabContentHtml += '</div>';
+    }
+    // Parent island logic
+    let parentIslandHtml = '';
+    if (d.parent_id && d.parent_id !== 'None') {
+        const parent = allNodeData.find(n => n.id == d.parent_id);
+        if (parent && parent.island !== undefined) {
+            parentIslandHtml = ` <span style="color:#888;font-size:0.92em;">(island ${parent.island})</span>`;
+        }
+    }
+    // Sidebar HTML
+    sidebarContent.innerHTML =
+        `<div style="position:relative;min-height:2em;">
+            ${starHtml}
+            ${closeBtn}
+            ${openLink}
+            <b>Program ID:</b> ${d.id}<br>
+            <b>Island:</b> ${d.island}<br>
+            <b>Generation:</b> ${d.generation}<br>
+            <b>Parent ID:</b> <a href="#" class="parent-link" data-parent="${d.parent_id || ''}">${d.parent_id || 'None'}</a>${parentIslandHtml}<br><br>
+            <b>Metrics:</b><br>${formatMetrics(d.metrics)}<br><br>
+            ${tabHtml}${tabContentHtml}
+        </div>`;
+    // Tab switching logic
+    if (tabNames.length > 1) {
+        const tabBar = document.getElementById('sidebar-tab-bar');
+        Array.from(tabBar.children).forEach(tabEl => {
+            tabEl.onclick = function() {
+                Array.from(tabBar.children).forEach(e => e.classList.remove('active'));
+                tabEl.classList.add('active');
+                const tabName = tabEl.dataset.tab;
+                const tabContent = document.getElementById('sidebar-tab-content');
+                if (tabName === 'Code') tabContent.innerHTML = `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${d.code}</pre>`;
+                if (tabName === 'Prompts') tabContent.innerHTML = `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${JSON.stringify(d.prompts, null, 2)}</pre>`;
+            };
+        });
+    }
+    // X button logic: also clear selection
+    const closeBtnEl = document.getElementById('sidebar-close-btn');
+    if (closeBtnEl) closeBtnEl.onclick = function() {
+        selectedProgramId = null;
+        sidebarSticky = false;
+        hideSidebar();
+    };
+    // Parent link logic: works in all tabs
+    const parentLink = sidebarContent.querySelector('.parent-link');
+    if (parentLink && parentLink.dataset.parent && parentLink.dataset.parent !== 'None' && parentLink.dataset.parent !== '') {
+        parentLink.onclick = function(e) {
+            e.preventDefault();
+            scrollAndSelectNodeById(parentLink.dataset.parent);
+        };
+    }
 }
 
 // Dark mode logic
@@ -331,31 +420,40 @@ function renderGraph(data) {
             highlightIds.has(d.id) ? 'node-highlighted' : '',
             selectedProgramId === d.id ? 'node-selected' : ''
         ].join(' ').trim())
+        .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+        .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
         .on("click", function(event, d) {
             selectedProgramId = d.id;
-            showSidebarContent(d);
+            sidebarSticky = true;
+            // Remove all node-hovered and node-selected classes
+            g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
+                .attr('stroke', function(nd) {
+                    return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
+                })
+                .attr('stroke-width', function(nd) {
+                    return selectedProgramId === nd.id ? 3 : 1.5;
+                });
+            d3.select(this).classed('node-selected', true);
+            showSidebarContent(d, false);
             showSidebar();
             selectProgram(selectedProgramId);
             event.stopPropagation();
         })
         .on("dblclick", openInNewTab)
         .on("mouseover", function(event, d) {
-            if (!selectedProgramId || selectedProgramId !== d.id) {
-                showSidebarContent(d);
+            if (!sidebarSticky && (!selectedProgramId || selectedProgramId !== d.id)) {
+                showSidebarContent(d, true);
                 showSidebar();
-                d3.select(this)
-                    .classed("node-hovered", true)
-                    .attr("stroke", "#FFD600").attr("stroke-width", 4);
             }
+            d3.select(this)
+                .classed('node-hovered', true)
+                .attr('stroke', '#FFD600').attr('stroke-width', 4);
         })
         .on("mouseout", function(event, d) {
-            if (!selectedProgramId || selectedProgramId !== d.id) {
-                showSidebarContent(null);
-                d3.select(this)
-                    .classed("node-hovered", false)
-                    .attr("stroke", d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
-                    .attr("stroke-width", d => selectedProgramId === d.id ? 3 : 1.5);
-            }
+            d3.select(this)
+                .classed('node-hovered', false)
+                .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
         })
         .call(d3.drag()
             .on("start", dragstarted)
@@ -376,6 +474,21 @@ function renderGraph(data) {
     });
 
     selectProgram(selectedProgramId);
+
+    // Click background to unselect node and reset sidebar (and hide sidebar)
+    svg.on("click", function(event) {
+        if (event.target === svg.node()) {
+            selectedProgramId = null;
+            sidebarSticky = false;
+            hideSidebar();
+            // Reset all node highlights and remove highlight classes
+            g.selectAll("circle")
+                .classed("node-selected", false)
+                .classed("node-hovered", false)
+                .attr("stroke", function(d) { return (highlightIds.has(d.id) ? '#2196f3' : '#333'); })
+                .attr("stroke-width", 1.5);
+        }
+    });
 }
 
 // D3 drag handlers
@@ -658,8 +771,9 @@ function renderNodeList(nodes) {
             if (e.target.tagName === 'A') return;
             selectedProgramId = node.id;
             window._lastSelectedNodeData = node;
+            sidebarSticky = true;
             renderNodeList(allNodeData);
-            showSidebarContent(node);
+            showSidebarContent(node, false); // always update on click
             showSidebar();
             selectProgram(selectedProgramId);
         };
@@ -1008,6 +1122,10 @@ function updateListRowBackgroundsForTheme() {
             .attr('text-anchor', 'middle')
             .attr('font-size', '1.1em')
             .text(metric);
+        // Highlight logic (same as branching)
+        const highlightFilter = document.getElementById('highlight-select').value;
+        const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
+        const highlightIds = new Set(highlightNodes.map(n => n.id));
         // Draw single NaN box (left of graph, spanning all islands)
         if (undefinedNodes.length) {
             // Make the NaN box narrower and transparent, with more gap to the graph
@@ -1045,12 +1163,12 @@ function updateListRowBackgroundsForTheme() {
                 .attr('r', d => getNodeRadius(d))
                 .attr('fill', d => getNodeColor(d))
                 .attr('class', d => [selectedProgramId === d.id ? 'node-selected' : ''].join(' ').trim())
-                .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+                .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
                 .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
                 .attr('opacity', 0.85)
                 .on('mouseover', function(event, d) {
-                    if (!selectedProgramId || selectedProgramId !== d.id) {
-                        showSidebarContent(d);
+                    if (!sidebarSticky && (!selectedProgramId || selectedProgramId !== d.id)) {
+                        showSidebarContent(d, true); // only update if not sticky
                         showSidebar();
                     }
                     d3.select(this)
@@ -1058,28 +1176,31 @@ function updateListRowBackgroundsForTheme() {
                         .attr('stroke', '#FFD600').attr('stroke-width', 4);
                 })
                 .on('mouseout', function(event, d) {
-                    if (!selectedProgramId || selectedProgramId !== d.id) {
-                        showSidebarContent(null);
-                        d3.select(this)
-                            .classed('node-hovered', false)
-                            .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
-                            .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5);
-                    }
+                    d3.select(this)
+                        .classed('node-hovered', false)
+                        .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                        .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
                 })
                 .on('click', function(event, d) {
                     event.preventDefault();
                     selectedProgramId = d.id;
                     window._lastSelectedNodeData = d;
-                    showSidebarContent(d);
+                    sidebarSticky = true;
+                    // Remove all node-hovered and node-selected classes
+                    g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
+                        .attr('stroke', function(nd) {
+                            return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
+                        })
+                        .attr('stroke-width', function(nd) {
+                            return selectedProgramId === nd.id ? 3 : 1.5;
+                        });
+                    d3.select(this).classed('node-selected', true);
+                    showSidebarContent(d, false); // always update on click
                     showSidebar();
                     selectProgram(selectedProgramId);
                     renderPerformanceGraph(nodes);
                 });
         }
-        // Highlight logic (same as branching)
-        const highlightFilter = document.getElementById('highlight-select').value;
-        const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
-        const highlightIds = new Set(highlightNodes.map(n => n.id));
         // Draw edges (parent-child links, can cross islands)
         const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
         // New: handle all edge types (defined→defined, defined→undefined, undefined→defined, undefined→undefined)
@@ -1149,12 +1270,12 @@ function updateListRowBackgroundsForTheme() {
                 highlightIds.has(d.id) ? 'node-highlighted' : '',
                 selectedProgramId === d.id ? 'node-selected' : ''
             ].join(' ').trim())
-            .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+            .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
             .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
             .attr('opacity', 0.85)
             .on('mouseover', function(event, d) {
-                if (!selectedProgramId || selectedProgramId !== d.id) {
-                    showSidebarContent(d);
+                if (!sidebarSticky && (!selectedProgramId || selectedProgramId !== d.id)) {
+                    showSidebarContent(d, true); // only update if not sticky
                     showSidebar();
                 }
                 d3.select(this)
@@ -1162,19 +1283,26 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke', '#FFD600').attr('stroke-width', 4);
             })
             .on('mouseout', function(event, d) {
-                if (!selectedProgramId || selectedProgramId !== d.id) {
-                    showSidebarContent(null);
-                    d3.select(this)
-                        .classed('node-hovered', false)
-                        .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
-                        .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5);
-                }
+                d3.select(this)
+                    .classed('node-hovered', false)
+                    .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+                    .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
             })
             .on('click', function(event, d) {
                 event.preventDefault();
                 selectedProgramId = d.id;
                 window._lastSelectedNodeData = d;
-                showSidebarContent(d);
+                sidebarSticky = true;
+                // Remove all node-hovered and node-selected classes
+                g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
+                    .attr('stroke', function(nd) {
+                        return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
+                    })
+                    .attr('stroke-width', function(nd) {
+                        return selectedProgramId === nd.id ? 3 : 1.5;
+                    });
+                d3.select(this).classed('node-selected', true);
+                showSidebarContent(d, false); // always update on click
                 showSidebar();
                 selectProgram(selectedProgramId);
                 renderPerformanceGraph(nodes);
@@ -1183,7 +1311,8 @@ function updateListRowBackgroundsForTheme() {
         svg.on('click', function(event) {
             if (event.target === svg.node()) {
                 selectedProgramId = null;
-                showSidebarContent(null);
+                sidebarSticky = false;
+                hideSidebar();
                 svg.selectAll('circle')
                     .classed('node-selected', false)
                     .classed('node-hovered', false)
