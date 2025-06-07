@@ -1,4 +1,3 @@
-/* main.css for OpenEvolve Evolution Visualizer */
 :root {
     --toolbar-bg: #fff;
     --sidebar-bg: #fff;
@@ -253,7 +252,7 @@ pre {
   min-height: 0;
   max-height: calc(100vh - 12em);
   overflow: auto;
-  margin-bottom: 2.5em; /* Add more bottom margin */
+  margin-bottom: 2.5em;
   box-sizing: border-box;
   background: #f7f7f7;
   padding: 0.7em 1em;
@@ -360,7 +359,6 @@ a:hover {
     filter: drop-shadow(0 0 12px #00b4d8cc);
 }
 
-/* Highlighted node for filter (graph view) */
 .node-highlighted {
     filter: drop-shadow(0 0 8px #2196f3) drop-shadow(0 0 16px #2196f3);
     stroke: #2196f3;
@@ -430,7 +428,6 @@ a:hover {
     background: #23272a;
 }
 
-/* Node list styles */
 #node-list-container {
     display: flex;
     flex-direction: column;
@@ -567,7 +564,6 @@ a:hover {
     background: transparent;
 }
 
-/* List view: multiline table cell style */
 .node-list-item > div {
     flex: 1 1 0;
     min-width: 0;
@@ -577,7 +573,6 @@ a:hover {
     gap: 0.2em;
 }
 
-/* Increase top padding in list view for search box */
 #view-list {
     display: block;
     padding-top: 4.5em !important;
@@ -586,7 +581,6 @@ a:hover {
     margin-bottom: 1em;
 }
 
-/* Table header style for list view (optional, if you add headers) */
 .node-list-header {
     display: flex;
     flex-direction: row;
@@ -612,7 +606,6 @@ a:hover {
     border: 1px solid var(--select-border);
 }
 
-/* Sidebar <pre> for code/prompt: wrap and break long lines */
 .sidebar-pre {
     white-space: pre-wrap !important;
     overflow-wrap: anywhere !important;
@@ -632,7 +625,6 @@ a:hover {
     color: #111 !important;
 }
 
-/* Fitness bar for list view */
 .fitness-bar {
     width: 12px;
     min-width: 12px;
@@ -750,7 +742,6 @@ a:hover {
   transition: width 0.2s;
 }
 
-/* List summary bar styles */
 .list-summary-bar {
   display: flex;
   align-items: center;
@@ -800,7 +791,6 @@ a:hover {
   transition: width 0.2s;
 }
 
-/* Sidebar tab bar */
 #sidebar-tab-bar {
   display: flex;
   gap: 1em;
@@ -828,7 +818,6 @@ a:hover {
   color: #e6eaf3;
 }
 
-/* --- PERFORMANCE TAB: Metric alignment and spacing --- */
 .performance-metric-row {
   display: flex;
   flex-direction: column;
@@ -869,14 +858,12 @@ a:hover {
   left: 0;
 }
 
-/* --- FITNESS BAR: Full height, min/max at top/bottom right, spacing --- */
 .node-list-item {
   min-height: 80px;
   align-items: stretch;
   gap: 32px !important;
 }
 
-/* --- NODE LIST: Spacing between fitness bar, meta, and metrics --- */
 .node-info-block {
   flex: 0 0 170px;
   display: flex;

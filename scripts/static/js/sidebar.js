@@ -111,7 +111,17 @@ export function showSidebarContent(d, fromHover = false) {
             if (parentNode) {
                 window._lastSelectedNodeData = parentNode;
             }
-            scrollAndSelectNodeById(parentLink.dataset.parent);
+            // Detect if performance tab is active (robust: check tab class, not style)
+            const perfTabBtn = document.getElementById('tab-performance');
+            const perfTabView = document.getElementById('view-performance');
+            if ((perfTabBtn && perfTabBtn.classList.contains('active')) || (perfTabView && perfTabView.classList.contains('active'))) {
+                import('./performance.js').then(mod => {
+                    mod.selectPerformanceNodeById(parentLink.dataset.parent);
+                    showSidebar(); // Ensure sidebar is visible
+                });
+            } else {
+                scrollAndSelectNodeById(parentLink.dataset.parent);
+            }
         };
     }
 }

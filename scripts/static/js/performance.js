@@ -394,3 +394,15 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
         }
     });
 })();
+
+// Exported function to select a node by ID and update the performance graph selection
+export function selectPerformanceNodeById(id) {
+    setSelectedProgramId(id);
+    setSidebarSticky(true);
+    if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+        renderPerformanceGraph(allNodeData);
+        // Also update sidebar content
+        const node = allNodeData.find(n => n.id == id);
+        if (node) showSidebarContent(node, false);
+    }
+}
