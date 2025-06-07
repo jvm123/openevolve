@@ -59,6 +59,11 @@
     </div>
     <div id="view-performance" style="padding-top:3.5em;"></div>
     <div id="view-prompts" style="padding-top:3.5em;"></div>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/mainUI.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/graph.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/performance.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/list.js') }}"></script>
 </body>
 </html>

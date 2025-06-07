@@ -1,6 +1,7 @@
 // Import shared state and helpers from main.js
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, getSelectedMetric, setAllNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
-import { showSidebar } from './sidebar.js';
+import { showSidebar, setSidebarSticky, showSidebarContent } from './sidebar.js';
+import { selectProgram } from './graph.js';
 
 // Node list rendering and logic
 function getNodeGray(d, minGray = 120, maxGray = 230) {
@@ -225,7 +226,7 @@ export function renderNodeList(nodes) {
             if (e.target.tagName === 'A') return;
             setSelectedProgramId(node.id);
             window._lastSelectedNodeData = node;
-            sidebarSticky = true;
+            setSidebarSticky(true);
             renderNodeList(allNodeData);
             showSidebarContent(node, false); // always update on click
             showSidebarListView();

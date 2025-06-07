@@ -2,11 +2,12 @@
 export let svg = d3.select('#graph-svg');
 export let g = svg.append('g');
 
-import { width, height, getHighlightNodes, allNodeData, selectedProgramId } from './main.js';
+import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
 import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky } from './sidebar.js';
+import { renderNodeList } from './list.js';
 
 // --- Utility: scroll and select node by id in any view ---
-function scrollAndSelectNodeById(nodeId) {
+export function scrollAndSelectNodeById(nodeId) {
     // Try list view first
     const container = document.getElementById('node-list-container');
     if (container) {
@@ -14,7 +15,7 @@ function scrollAndSelectNodeById(nodeId) {
         const target = rows.find(div => div.getAttribute('data-node-id') === nodeId);
         if (target) {
             target.scrollIntoView({behavior: 'smooth', block: 'center'});
-            selectedProgramId = nodeId;
+            setSelectedProgramId(nodeId);
             renderNodeList(allNodeData);
             showSidebarContent(allNodeData.find(n => n.id == nodeId));
             showSidebar();
@@ -26,7 +27,7 @@ function scrollAndSelectNodeById(nodeId) {
     // Try graph views (branching/performance)
     const node = allNodeData.find(n => n.id == nodeId);
     if (node) {
-        selectedProgramId = nodeId;
+        setSelectedProgramId(nodeId);
         showSidebarContent(node);
         showSidebar();
         setSidebarSticky(true);
@@ -76,7 +77,7 @@ export function getNodeRadius(d) {
     return minR + (maxR - minR) * (score - minScore) / (maxScore - minScore);
 }
 
-function selectProgram(programId) {
+export function selectProgram(programId) {
     const nodes = g.selectAll("circle");
     nodes.each(function(d) {
         const nodeElem = d3.select(this);
@@ -124,7 +125,7 @@ function renderGraph(data) {
         .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
         .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
         .on("click", function(event, d) {
-            selectedProgramId = d.id;
+            setSelectedProgramId(d.id);
             setSidebarSticky(true);
             // Remove all node-hovered and node-selected classes
             g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
@@ -183,7 +184,7 @@ function renderGraph(data) {
     // Click background to unselect node and reset sidebar (and hide sidebar)
     svg.on("click", function(event) {
         if (event.target === svg.node()) {
-            selectedProgramId = null;
+            setSelectedProgramId(null);
             setSidebarSticky(false);
             hideSidebar();
             // Reset all node highlights and remove highlight classes
@@ -215,7 +216,7 @@ function dragended(event, d) {
 // Click background to unselect node and reset sidebar (and hide sidebar)
 svg.on("click", function(event) {
     if (event.target === svg.node()) {
-        selectedProgramId = null;
+        setSelectedProgramId(null);
         showSidebarContent(null);
         setSidebarSticky(false);
         // Reset all node highlights and remove highlight classes

@@ -1,7 +1,7 @@
 // Import shared state and helpers from main.js
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, fetchAndRender, getSelectedMetric, selectedProgramId, setSelectedProgramId } from './main.js';
-import { getNodeRadius, getNodeColor } from './graph.js';
-import { hideSidebar, sidebarSticky, showSidebarContent } from './sidebar.js';
+import { getNodeRadius, getNodeColor, selectProgram, scrollAndSelectNodeById } from './graph.js';
+import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebarSticky } from './sidebar.js';
 
 // --- Performance Tab D3 Graph ---
 (function() {
@@ -195,7 +195,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent } from './sidebar.js';
                     event.preventDefault();
                     setSelectedProgramId(d.id);
                     window._lastSelectedNodeData = d;
-                    sidebarSticky = true;
+                    setSidebarSticky(true);
                     // Remove all node-hovered and node-selected classes
                     g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                         .attr('stroke', function(nd) {
@@ -306,7 +306,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent } from './sidebar.js';
                 event.preventDefault();
                 setSelectedProgramId(d.id);
                 window._lastSelectedNodeData = d;
-                sidebarSticky = true;
+                setSidebarSticky(true);
                 // Remove all node-hovered and node-selected classes
                 g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                     .attr('stroke', function(nd) {
@@ -325,7 +325,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent } from './sidebar.js';
         svg.on('click', function(event) {
             if (event.target === svg.node()) {
                 setSelectedProgramId(null);
-                sidebarSticky = false;
+                setSidebarSticky(false);
                 hideSidebar();
                 svg.selectAll('circle')
                     .classed('node-selected', false)

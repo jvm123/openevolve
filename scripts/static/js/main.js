@@ -1,9 +1,9 @@
 // main.js for OpenEvolve Evolution Visualizer
 
-import { sidebarSticky } from './sidebar.js';
+import { sidebarSticky, showSidebarContent } from './sidebar.js';
 // Import missing functions from list.js and graph.js
 import { updateListSidebarLayout, updateListRowBackgroundsForTheme, renderNodeList } from './list.js';
-import { renderGraph } from './graph.js';
+import { renderGraph, g } from './graph.js';
 
 // Declare allNodeData at the very top to avoid ReferenceError
 export let allNodeData = [];

@@ -1,5 +1,7 @@
 import { updateListRowBackgroundsForTheme } from './list.js';
 import { width, height, selectedProgramId } from './main.js';
+import { selectProgram } from './graph.js';
+import { showSidebarContent } from './sidebar.js';
 
 const darkToggleContainer = document.getElementById('darkmode-toggle').parentElement;
 const darkToggleInput = document.getElementById('darkmode-toggle');

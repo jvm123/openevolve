@@ -1,5 +1,6 @@
 // Import shared state and helpers from main.js
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes } from './main.js';
+import { scrollAndSelectNodeById } from './graph.js';
 
 // Sidebar logic (automatic show/hide)
 const sidebar = document.getElementById('sidebar');
