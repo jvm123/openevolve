@@ -18,23 +18,22 @@
             <div class="tab" id="tab-performance">Performance</div>
             <div class="tab" id="tab-prompts">Prompts</div>
         </div>
-        <label class="toolbar-label" for="metric-select" style="margin-left:2em;">Metric:</label>
-        <select id="metric-select" style="font-size:1em;margin-left:0.5em;">
+        <label class="toolbar-label" for="metric-select">Metric:
+        <select id="metric-select">
             <option value="combined_score" selected>combined_score</option>
-        </select>
-        <label class="toolbar-label" for="highlight-select"
-               style="margin-left:2em;">
-            Highlight:
-        </label>
-        <select id="highlight-select" style="font-size:1em;margin-left:0.5em;">
-            <option value="best" selected>Best</option>
-            <option value="first">First</option>
+        </select></label>
+        <label class="toolbar-label" for="highlight-select">Highlight:
+        <select id="highlight-select">
+            <option value="none">None</option>
+            <option value="top" selected>Top score</option>
+            <option value="first">First generation</option>
             <option value="failed">Failed</option>
-        </select>
-        <div style="margin-left:auto;display:flex;align-items:center;cursor:pointer;gap:0.3em;min-width:120px;">
-            <label style="margin:0;display:flex;align-items:center;gap:0.3em;">Dark mode:</label>
-            <input type="checkbox" id="darkmode-toggle" style="accent-color:#0074d9;">
-            <span id="darkmode-label" style="font-size:1.1em;">🌙</span>
+            <option value="unset">Metric unset</option>
+        </select></label>
+        <div class="toolbar-darkmode">
+            <label class="toolbar-label" >Dark mode:</label>
+            <input type="checkbox" id="darkmode-toggle">
+            <span id="darkmode-label">🌙</span>
         </div>
     </div>
     <div id="sidebar">

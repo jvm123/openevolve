@@ -51,19 +51,61 @@ h1 span { font-size: 0.5em; color: #666; }
 #toolbar {
     display: flex;
     align-items: center;
-    gap: 2em;
-    background: var(--toolbar-bg);
-    padding: 0.5em 0 0.5em 0.5em;
-    margin-bottom: 0.5em;
-    box-sizing: border-box;
-    width: 100vw;
-    max-width: 100vw;
-    overflow-x: auto;
+    flex-direction: row;
+    gap: 0.5em;
+    padding: 0.7em 1.5em 0.7em 1.5em;
+    background: var(--toolbar-bg, #f8f9fa);
+    border-bottom: 1.5px solid #e0e0e0;
+    z-index: 10;
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 100;
-    box-shadow: var(--toolbar-shadow);
+    right: 0;
+    height: 3.5em;
+    box-sizing: border-box;
+}
+#toolbar > label.toolbar-label {
+    margin-left: 2em;
+    margin-bottom: 0;
+    margin-right: 0.2em;
+    font-weight: 500;
+    font-size: 1em;
+    color: var(--toolbar-label, #333);
+    white-space: nowrap;
+}
+#toolbar > select {
+    font-size: 1em;
+    margin-left: 0.5em;
+    margin-right: 1em;
+    min-width: 8.5em;
+    max-width: 14em;
+    padding: 0.2em 0.7em;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+    background: var(--toolbar-select-bg, #fff);
+    color: var(--toolbar-select-color, #222);
+    vertical-align: middle;
+}
+#toolbar > .tabs {
+    margin-left: 1.5em;
+    margin-right: 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+#toolbar > div[style*="margin-left:auto"] {
+    margin-left: auto !important;
+}
+@media (max-width: 900px) {
+    #toolbar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 0.7em 0.5em 0.7em 0.5em;
+    }
+    #toolbar > label.toolbar-label, #toolbar > select {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
 }
 #sidebar {
     position: fixed;

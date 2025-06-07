@@ -1,12 +1,9 @@
 // main.js for OpenEvolve Evolution Visualizer
-// ...existing code from <script> in index.html...
 
-// Modern toggle switch logic
 const darkToggleContainer = document.getElementById('darkmode-toggle').parentElement;
 const darkToggleInput = document.getElementById('darkmode-toggle');
 const darkToggleLabel = document.getElementById('darkmode-label');
 
-// Replace checkbox with custom toggle switch
 if (!document.getElementById('custom-dark-toggle')) {
     const wrapper = document.createElement('label');
     wrapper.className = 'toggle-switch';
@@ -20,9 +17,8 @@ if (!document.getElementById('custom-dark-toggle')) {
     wrapper.appendChild(input);
     wrapper.appendChild(slider);
     darkToggleContainer.replaceChild(wrapper, darkToggleInput);
-    // Move the label after the switch
+
     darkToggleContainer.appendChild(darkToggleLabel);
-    // Re-attach event
     input.addEventListener('change', function() {
         setTheme(this.checked ? 'dark' : 'light');
     });
@@ -384,20 +380,6 @@ function fetchAndRender() {
             if (metricSelect.options.length > 0) {
                 metricSelect.selectedIndex = 0;
             }
-            // Update highlight-select options
-            highlightSelect.innerHTML = '';
-            [
-                { value: 'top', label: 'Top score' },
-                { value: 'first', label: 'First generation' },
-                { value: 'failed', label: 'Failed' },
-                { value: 'unset', label: 'Metric unset' }
-            ].forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt.value;
-                option.textContent = opt.label;
-                highlightSelect.appendChild(option);
-            });
-            highlightSelect.value = currentHighlight || 'top';
         });
 }
 fetchAndRender();
@@ -444,15 +426,45 @@ function getHighlightNodes(nodes, filter, metric) {
     return [];
 }
 
-// Switch metric-select and highlight-select order in the toolbar
+// Switch metric-select and highlight-select order in the toolbar (robust, no error)
 (function() {
     const toolbar = document.getElementById('toolbar');
     const metricSelect = document.getElementById('metric-select');
     const highlightSelect = document.getElementById('highlight-select');
     if (toolbar && metricSelect && highlightSelect) {
-        // Move metric-select before highlight-select
-        if (highlightSelect.previousElementSibling !== metricSelect) {
+        // Only move if both are direct children of toolbar and not already in order
+        if (
+            metricSelect.parentElement === toolbar &&
+            highlightSelect.parentElement === toolbar &&
+            toolbar.children.length > 0 &&
+            highlightSelect.previousElementSibling !== metricSelect
+        ) {
             toolbar.insertBefore(metricSelect, highlightSelect);
         }
     }
 })();
+
+// Add event listener to re-highlight nodes on highlight-select change (no full rerender)
+const highlightSelect = document.getElementById('highlight-select');
+highlightSelect.addEventListener('change', function() {
+    // Only update highlight classes, do not rerender graph
+    const metric = getSelectedMetric();
+    const filter = highlightSelect.value;
+    // Use allNodeData for current nodes
+    const highlightNodes = getHighlightNodes(allNodeData, filter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+    // Update graph view
+    g.selectAll('circle').each(function(d) {
+        d3.select(this).classed('node-highlighted', highlightIds.has(d.id));
+    });
+    // Update list view
+    const container = document.getElementById('node-list-container');
+    if (container) {
+        Array.from(container.children).forEach(div => {
+            const nodeId = div.innerHTML.match(/<b>ID:<\/b>\s*([^<]+)/);
+            if (nodeId && nodeId[1]) {
+                div.classList.toggle('highlighted', highlightIds.has(nodeId[1]));
+            }
+        });
+    }
+});
