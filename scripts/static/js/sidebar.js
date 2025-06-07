@@ -106,6 +106,11 @@ export function showSidebarContent(d, fromHover = false) {
     if (parentLink && parentLink.dataset.parent && parentLink.dataset.parent !== 'None' && parentLink.dataset.parent !== '') {
         parentLink.onclick = function(e) {
             e.preventDefault();
+            // Set last selected node to parent for correct sidebar/selection sync
+            const parentNode = allNodeData.find(n => n.id == parentLink.dataset.parent);
+            if (parentNode) {
+                window._lastSelectedNodeData = parentNode;
+            }
             scrollAndSelectNodeById(parentLink.dataset.parent);
         };
     }

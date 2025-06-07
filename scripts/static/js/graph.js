@@ -17,6 +17,7 @@ export function scrollAndSelectNodeById(nodeId) {
             showSidebar();
             setSidebarSticky(true);
             selectProgram(selectedProgramId);
+            updateGraphNodeSelection();
             return true;
         }
     }
@@ -28,10 +29,19 @@ export function scrollAndSelectNodeById(nodeId) {
         showSidebar();
         setSidebarSticky(true);
         selectProgram(selectedProgramId);
+        updateGraphNodeSelection();
         // Optionally, center/zoom to node in D3 (not implemented here)
         return true;
     }
     return false;
+}
+
+export function updateGraphNodeSelection() {
+    if (!g) return;
+    g.selectAll('circle')
+        .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+        .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+        .classed('node-selected', d => selectedProgramId === d.id);
 }
 
 export function getNodeColor(d) {
