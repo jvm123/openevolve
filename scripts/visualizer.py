@@ -16,8 +16,43 @@ HTML_TEMPLATE = """
     <title>OpenEvolve Evolution Visualizer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        html, body { height: 100%; margin: 0; padding: 0; }
+        html, body { height: 100%; margin: 0; padding: 0 1em; }
         body { font-family: Arial, sans-serif; background: #f7f7f7; height: 100vh; width: 100vw; }
+        h1 span { font-size: 0.5em; color: #666; }
+        #toolbar {
+            display: flex;
+            align-items: center;
+            gap: 2em;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            padding: 0.5em 0 0.5em 0.5em;
+            margin-bottom: 0.5em;
+        }
+        .tabs {
+            display: flex;
+            gap: 1em;
+        }
+        .tab {
+            padding: 0.3em 1.2em;
+            border-radius: 6px 6px 0 0;
+            background: #eee;
+            cursor: pointer;
+            font-weight: 500;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+        .tab.active {
+            background: #fff;
+            border-bottom: 1px solid #fff;
+        }
+        .toolbar-label {
+            font-size: 1em;
+            margin-left: 2em;
+        }
+        #highlight-select {
+            font-size: 1em;
+            margin-left: 0.5em;
+        }
         #graph { width: 100vw; height: 100vh; }
         .node circle { stroke: #fff; stroke-width: 2px; }
         .node text { pointer-events: none; font-size: 12px; }
@@ -46,12 +81,48 @@ HTML_TEMPLATE = """
             overflow: auto;
             white-space: pre;
         }
+        #view-branching, #view-performance, #view-prompts {
+            display: none;
+        }
+        #view-branching.active, #view-performance.active, #view-prompts.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <h1>OpenEvolve Evolution Visualizer</h1>
-    <div id="graph"></div>
+    <h1>OpenEvolve Evolution Visualizer<br /><span>Checkpoint: None</span></h1>
+    <div id="toolbar">
+        <div class="tabs">
+            <div class="tab active" id="tab-branching">Branching</div>
+            <div class="tab" id="tab-performance">Performance</div>
+            <div class="tab" id="tab-prompts">Prompts</div>
+        </div>
+        <label class="toolbar-label" for="highlight-select">Highlight:</label>
+        <select id="highlight-select">
+            <option value="best" selected>Best</option>
+            <option value="first">First</option>
+            <option value="failed">Failed</option>
+        </select>
+    </div>
+    <div id="view-branching" class="active">
+        <div id="graph"></div>
+    </div>
+    <div id="view-performance"></div>
+    <div id="view-prompts"></div>
     <script>
+    // Tab switching logic
+    const tabs = ["branching", "performance", "prompts"];
+    tabs.forEach(tab => {
+        document.getElementById(`tab-${tab}`).addEventListener('click', function() {
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('active');
+                document.getElementById(`view-${t}`).classList.remove('active');
+            });
+            this.classList.add('active');
+            document.getElementById(`view-${tab}`).classList.add('active');
+        });
+    });
+
     let width = window.innerWidth;
     let height = window.innerHeight - document.querySelector('h1').offsetHeight;
 
@@ -79,6 +150,7 @@ HTML_TEMPLATE = """
     }
 
     function showTooltip(event, d) {
+        resetTooltip(false);
         tooltip.transition().duration(200).style("opacity", .95);
         tooltip.html(
             `<b>Program ID:</b> ${d.id}<br>` +
@@ -90,25 +162,57 @@ HTML_TEMPLATE = """
         )
         .style("left", (event.pageX + 20) + "px")
         .style("top", (event.pageY - 20) + "px");
+
+        d3.select(event.target)
+            .transition()
+            .duration(200)
+            .attr("stroke", "#000")
+            .attr("stroke-width", 3);
     }
     function showTooltipSticky(event, d) {
-        sticky = true;
         showTooltip(event, d);
+        sticky = true;
     }
 
-    function hideTooltip() {
+    function hideTooltip(event, d) {
         if (sticky) return;
         tooltip.transition().duration(300).style("opacity", 0);
+
+        d3.selectAll("circle")
+            .transition()
+            .duration(200)
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 1.5);
     }
-    function resetTooltip() {
-        sticky = false;
-        hideTooltip(true);
+    function resetTooltip(event, d) {
+        // Only reset if the click target is the SVG itself (not a node)
+        if (!event || event.target === this) {
+            sticky = false;
+            hideTooltip(event, d);
+        }
     }
 
     function openInNewTab(event, d) {
         const url = `/program/${d.id}`;
         window.open(url, '_blank');
         event.stopPropagation(); // Prevent tooltip from closing
+    }
+
+    function getNodeColor(d) {
+        return d.island !== undefined ? d3.schemeCategory10[d.island % 10] : "#888";
+    }
+
+    function getNodeSuccess(d) {
+        return d.metrics && typeof d.metrics.overall_score === "number" && !d.metrics.error;
+    }
+
+    function getNodeRadius(d) {
+        let minScore = 0, maxScore = 1;
+        let minR = 10, maxR = 32;
+        let score = d.metrics && typeof d.metrics.overall_score === "number" ? d.metrics.overall_score : null;
+        if (score === null) return minR;
+        score = Math.max(minScore, Math.min(maxScore, score));
+        return minR + (maxR - minR) * (score - minScore) / (maxScore - minScore);
     }
 
     function renderGraph(data) {
@@ -132,8 +236,8 @@ HTML_TEMPLATE = """
             .selectAll("circle")
             .data(data.nodes)
             .enter().append("circle")
-            .attr("r", 16)
-            .attr("fill", d => d.island !== undefined ? d3.schemeCategory10[d.island % 10] : "#888")
+            .attr("r", d => getNodeRadius(d))
+            .attr("fill", d => getNodeColor(d))
             .on("mouseover", showTooltip)
             .on("click", showTooltipSticky)
             .on("dblclick", openInNewTab)
@@ -173,12 +277,7 @@ HTML_TEMPLATE = """
     }
 
     // Add background click handler to reset tooltip
-    svg.on("click", function(event) {
-        // Only reset if the click target is the SVG itself (not a node)
-        if (event.target === this) {
-            resetTooltip();
-        }
-    });
+    svg.on("click", resetTooltip);
 
     function fetchAndRender() {
         fetch('/api/data')
@@ -191,8 +290,8 @@ HTML_TEMPLATE = """
                 }
 
                 // set headline to include data.checkpoint_dir
-                let title = "OpenEvolve Evolution Visualizer | Checkpoint: " + data.checkpoint_dir;
-                document.querySelector('h1').textContent = title;
+                let title = "OpenEvolve Evolution Visualizer <br /><span>Checkpoint: " + data.checkpoint_dir + "</span>";
+                document.querySelector('h1').innerHTML = title;
             });
     }
     fetchAndRender();
@@ -222,17 +321,21 @@ HTML_TEMPLATE_PROGRAM_PAGE = """
         </style>
     </head>
     <body>
-        <h1>Checkpoint: {{checkpoint_dir}} | Program ID: {{ program_data.id }}</h1>
-        <h2>Island: {{ program_data.island }}</h2>
-        <h3>Generation: {{ program_data.generation }}</h3>
-        <h3>Parent ID: {{ program_data.parent_id or 'None' }}</h3>
-        <h3>Metrics:</h3>
+        <h1>Program ID: {{ program_data.id }}</h1>
+        <ul>
+            <li><strong>Checkpoint:</strong> {{checkpoint_dir}}</li>
+            <li><strong>Island:</strong> {{ program_data.island }}</li>
+            <li><strong>Generation:</strong> {{ program_data.generation }}</li>
+            <li><strong>Parent ID:</strong> {{ program_data.parent_id or 'None' }}</li>
+            <li><strong>Metrics:</strong>
         <ul>
             {% for key, value in program_data.metrics.items() %}
                 <li><strong>{{ key }}:</strong> {{ value }}</li>
             {% endfor %}
         </ul>
-        <h3>Code:</h3>
+            </li>
+            </ul>
+        <h2>Code:</h2>
         <pre>{{ program_data.code }}</pre>
     </body>
     </html>
@@ -299,18 +402,16 @@ checkpoint_dir = None  # Global variable to store the checkpoint directory
 
 @app.route("/api/data")
 def data():
+    global checkpoint_dir
     base_folder = os.environ.get("EVOLVE_OUTPUT", "examples/")
-    checkpoint = find_latest_checkpoint(base_folder)
-    if not checkpoint:
+    checkpoint_dir = find_latest_checkpoint(base_folder)
+    if not checkpoint_dir:
         logger.info(f"No checkpoints found in {base_folder}")
         return jsonify({"nodes": [], "edges": [], "checkpoint_dir": ""})
 
-    # Memorize checkpoint directory for usage in other routes
-    global checkpoint_dir
-    checkpoint_dir = checkpoint
 
-    logger.info(f"Loading data from checkpoint: {checkpoint}")
-    data = load_evolution_data(checkpoint)
+    logger.info(f"Loading data from checkpoint: {checkpoint_dir}")
+    data = load_evolution_data(checkpoint_dir)
     logger.debug(f"Data: {data}")
     return jsonify(data)
 
@@ -321,12 +422,8 @@ def program_page(program_id):
     if checkpoint_dir is None:
         return "No checkpoint loaded", 500
 
-    program_path = os.path.join(checkpoint_dir, f"programs/{program_id}.json")
-    if not os.path.exists(program_path):
-        return "Program not found", 404
-
-    with open(program_path) as f:
-        program_data = json.load(f)
+    data = load_evolution_data(checkpoint_dir)
+    program_data = next((p for p in data["nodes"] if p["id"] == program_id), None)
 
     return render_template_string(
         HTML_TEMPLATE_PROGRAM_PAGE, program_data=program_data, checkpoint_dir=checkpoint_dir
