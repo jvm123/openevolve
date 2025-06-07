@@ -46,7 +46,11 @@ export function showSidebarContent(d, fromHover = false) {
             tabNames.map((name, i) => `<span class="sidebar-tab${i===0?' active':''}" data-tab="${name}">${name}</span>`).join('') + '</div>';
         tabContentHtml = '<div id="sidebar-tab-content">';
         if (tabNames[0] === 'Code') tabContentHtml += `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${d.code}</pre>`;
-        if (tabNames[0] === 'Prompts') tabContentHtml += `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${JSON.stringify(d.prompts, null, 2)}</pre>`;
+        if (tabNames[0] === 'Prompts') {
+            for (const [k, v] of Object.entries(d.prompts)) {
+                tabContentHtml += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre style="max-height:180px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${v}</pre></div>`;
+            }
+        }
         tabContentHtml += '</div>';
     }
     // Parent island logic
@@ -80,7 +84,13 @@ export function showSidebarContent(d, fromHover = false) {
                 const tabName = tabEl.dataset.tab;
                 const tabContent = document.getElementById('sidebar-tab-content');
                 if (tabName === 'Code') tabContent.innerHTML = `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${d.code}</pre>`;
-                if (tabName === 'Prompts') tabContent.innerHTML = `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${JSON.stringify(d.prompts, null, 2)}</pre>`;
+                if (tabName === 'Prompts') {
+                    let html = '';
+                    for (const [k, v] of Object.entries(d.prompts)) {
+                        html += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre style="max-height:180px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${v}</pre></div>`;
+                    }
+                    tabContent.innerHTML = html;
+                }
             };
         });
     }

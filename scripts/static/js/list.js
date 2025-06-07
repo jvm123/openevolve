@@ -256,6 +256,12 @@ if (document.getElementById('list-sort')) {
     document.getElementById('list-sort').addEventListener('change', () => renderNodeList(allNodeData));
 }
 
+// Highlight select event
+const highlightSelect = document.getElementById('highlight-select');
+highlightSelect.addEventListener('change', function() {
+    renderNodeList(allNodeData);
+});
+
 // On page load, set default sort to generation
 if (document.getElementById('list-sort')) {
     document.getElementById('list-sort').value = 'generation';

@@ -199,6 +199,11 @@ pre {
     box-shadow: 0 2px 8px #1e3a8c44;
     border: 1px solid #3b5ca8;
 }
+[data-theme="dark"] #sidebar-content pre,
+[data-theme="dark"] .sidebar-tab-content pre {
+    color: #111 !important;
+    background: #f7f7f7 !important;
+}
 #sidebar-content {
     display: block;
     height: auto;
