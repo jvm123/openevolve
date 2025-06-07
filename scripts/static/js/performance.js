@@ -349,17 +349,17 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
         }
         perfSummary.style.paddingTop = '2.2em';
         perfSummary.innerHTML = `
-          <div class="summary-block">
+          <div class="summary-block performance-metric-row">
             <span class="summary-icon">🏆</span>
-            <span class="summary-label">Top score</span>
-            <span class="summary-value">${topScore.toFixed(4)}</span>
-            ${renderMetricBar(topScore, minScore, maxScore)}
+            <span class="performance-metric-label">Top score</span>
+            <span class="performance-metric-value">${topScore.toFixed(4)}</span>
+            <span class="performance-metric-bar">${renderMetricBar(topScore, minScore, maxScore)}</span>
           </div>
-          <div class="summary-block">
+          <div class="summary-block performance-metric-row">
             <span class="summary-icon">📊</span>
-            <span class="summary-label">Average</span>
-            <span class="summary-value">${avgScore.toFixed(4)}</span>
-            ${renderMetricBar(avgScore, minScore, maxScore)}
+            <span class="performance-metric-label">Average</span>
+            <span class="performance-metric-value">${avgScore.toFixed(4)}</span>
+            <span class="performance-metric-bar">${renderMetricBar(avgScore, minScore, maxScore)}</span>
           </div>
         `;
     }

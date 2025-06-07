@@ -166,24 +166,14 @@ export function renderNodeList(nodes) {
         // Fitness bar HTML (vertical, with min/max at top right/bottom right)
         const bar = document.createElement('div');
         bar.className = 'fitness-bar';
-        bar.style.position = 'relative';
-        bar.style.width = '28px';
-        bar.style.height = '64px';
-        bar.style.margin = '0 20px 0 0';
         bar.innerHTML = `
-            <span class="fitness-bar-max" style="position:absolute;top:-1.2em;right:0;font-size:0.85em;color:#bbb;">${maxScore.toFixed(2)}</span>
-            <span class="fitness-bar-min" style="position:absolute;top:100%;right:0;font-size:0.85em;color:#bbb;">${minScore.toFixed(2)}</span>
-            <div class="fitness-bar-fill" style="position:absolute;bottom:0;left:0;width:100%;background:#2196f3;border-radius:4px 4px 0 0;height:${Math.round(percent * 100)}%;transition:height 0.2s;"></div>
+            <span class="fitness-bar-max">${maxScore.toFixed(2)}</span>
+            <span class="fitness-bar-min">${minScore.toFixed(2)}</span>
+            <div class="fitness-bar-fill" style="height:${Math.round(percent * 100)}%;"></div>
         `;
         // Main info block (ID, Gen, Island, Parent)
         const infoBlock = document.createElement('div');
         infoBlock.className = 'node-info-block';
-        infoBlock.style.flex = '0 0 160px';
-        infoBlock.style.display = 'flex';
-        infoBlock.style.flexDirection = 'column';
-        infoBlock.style.justifyContent = 'center';
-        infoBlock.style.gap = '2px';
-        infoBlock.style.marginRight = '18px';
         infoBlock.innerHTML = `
             <div><b>ID:</b> ${node.id}</div>
             <div><b>Gen:</b> ${node.generation ?? ''}</div>
@@ -191,7 +181,7 @@ export function renderNodeList(nodes) {
             <div><b>Parent:</b> <a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></div>
         `;
         // Metrics block below, full width
-        let metricsHtml = '<div class="metrics-block" style="display:flex;flex-direction:column;gap:2px;">';
+        let metricsHtml = '<div class="metrics-block">';
         if (node.metrics) {
             Object.entries(node.metrics).forEach(([k, v]) => {
                 let val = (typeof v === 'number' && isFinite(v)) ? v.toFixed(4) : v;
@@ -205,8 +195,8 @@ export function renderNodeList(nodes) {
         metricsHtml += '</div>';
         // Flexbox layout: fitness bar | info block | metrics block
         row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '0';
+        row.style.alignItems = 'stretch';
+        row.style.gap = '32px';
         row.style.padding = '12px 8px';
         row.style.margin = '0 0 10px 0';
         row.style.borderRadius = '8px';
@@ -218,8 +208,6 @@ export function renderNodeList(nodes) {
         const metricsBlock = document.createElement('div');
         metricsBlock.innerHTML = metricsHtml;
         metricsBlock.className = 'metrics-block-outer';
-        metricsBlock.style.flex = '1 1 0';
-        metricsBlock.style.marginLeft = '18px';
         row.appendChild(metricsBlock);
         // Row selection logic: select on click anywhere except links
         row.onclick = (e) => {
