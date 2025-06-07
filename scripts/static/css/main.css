@@ -208,6 +208,7 @@ pre {
     display: block;
     height: auto;
     min-height: 0;
+    margin-bottom: 2.5em;
 }
 #sidebar-content pre {
     display: block;
