@@ -211,12 +211,53 @@ pre {
 }
 #sidebar-content pre {
     display: block;
-    flex: none;
+    flex: 1 1 auto;
     min-height: 0;
-    max-height: calc(60vh - 2em);
+    max-height: calc(100vh - 10em);
     overflow: auto;
     margin-bottom: 1.5em;
     box-sizing: border-box;
+    white-space: pre;
+    word-break: normal;
+}
+.sidebar-code-pre {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100vh - 12em);
+  overflow: auto;
+  margin-bottom: 2.5em; /* Add more bottom margin */
+  box-sizing: border-box;
+  background: #f7f7f7;
+  padding: 0.7em 1em;
+  border-radius: 6px;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+  font-size: 1em;
+  line-height: 1.4;
+  white-space: pre;
+  word-break: normal;
+}
+[data-theme="dark"] .sidebar-code-pre {
+  background: #f7f7f7 !important;
+  color: #111 !important;
+}
+.sidebar-pre {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  max-height: 180px;
+  overflow: auto;
+  background: #f7f7f7;
+  padding: 0.7em 1em;
+  border-radius: 6px;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+  font-size: 1em;
+  line-height: 1.4;
+  margin-bottom: 0.7em;
+}
+[data-theme="dark"] .sidebar-pre {
+  background: #f7f7f7 !important;
+  color: #111 !important;
 }
 select {
     background: var(--select-bg);
@@ -546,8 +587,22 @@ a:hover {
 
 /* Sidebar <pre> for code/prompt: wrap and break long lines */
 .sidebar-pre {
-    white-space: pre-wrap;
-    word-break: break-word;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    max-height: 180px;
+    overflow: auto;
+    background: #f7f7f7;
+    padding: 0.7em 1em;
+    border-radius: 6px;
+    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+    font-size: 1em;
+    line-height: 1.4;
+    margin-bottom: 0.7em;
+}
+[data-theme="dark"] .sidebar-pre {
+    background: #f7f7f7 !important;
+    color: #111 !important;
 }
 
 /* Fitness bar for list view */

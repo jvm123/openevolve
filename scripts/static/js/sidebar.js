@@ -45,10 +45,10 @@ export function showSidebarContent(d, fromHover = false) {
         tabHtml = '<div id="sidebar-tab-bar" style="display:flex;gap:0.7em;margin-bottom:0.7em;">' +
             tabNames.map((name, i) => `<span class="sidebar-tab${i===0?' active':''}" data-tab="${name}">${name}</span>`).join('') + '</div>';
         tabContentHtml = '<div id="sidebar-tab-content">';
-        if (tabNames[0] === 'Code') tabContentHtml += `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${d.code}</pre>`;
+        if (tabNames[0] === 'Code') tabContentHtml += `<pre class="sidebar-code-pre">${d.code}</pre>`;
         if (tabNames[0] === 'Prompts') {
             for (const [k, v] of Object.entries(d.prompts)) {
-                tabContentHtml += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre style="max-height:180px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${v}</pre></div>`;
+                tabContentHtml += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre class="sidebar-pre">${v}</pre></div>`;
             }
         }
         tabContentHtml += '</div>';
@@ -83,11 +83,11 @@ export function showSidebarContent(d, fromHover = false) {
                 tabEl.classList.add('active');
                 const tabName = tabEl.dataset.tab;
                 const tabContent = document.getElementById('sidebar-tab-content');
-                if (tabName === 'Code') tabContent.innerHTML = `<pre style="max-height:260px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${d.code}</pre>`;
+                if (tabName === 'Code') tabContent.innerHTML = `<pre class="sidebar-code-pre">${d.code}</pre>`;
                 if (tabName === 'Prompts') {
                     let html = '';
                     for (const [k, v] of Object.entries(d.prompts)) {
-                        html += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre style="max-height:180px;overflow:auto;background:#f7f7f7;padding:0.7em 1em;border-radius:6px;">${v}</pre></div>`;
+                        html += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre class="sidebar-pre">${v}</pre></div>`;
                     }
                     tabContent.innerHTML = html;
                 }
