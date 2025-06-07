@@ -373,7 +373,7 @@ a:hover {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+    gap: 32px;
     padding: 12px 8px;
     margin: 0 0 10px 0;
     border-radius: 8px;
@@ -384,7 +384,8 @@ a:hover {
     z-index: 1;
     user-select: text;
     font-size: 1em;
-    min-height: 64px;
+    min-height: 80px;
+    padding-left: 5em;
 }
 [data-theme="dark"] .node-list-item {
     color: #fff !important;
@@ -404,7 +405,6 @@ a:hover {
     box-shadow: 0 0 0 2px #2196f3, 0 0 0 3px red;
     z-index: 4;
 }
-
 [data-theme="dark"] .node-list-item.selected {
     border: 2.5px solid red !important;
     box-shadow: 0 0 0 2px #00b4d8cc;
@@ -424,17 +424,26 @@ a:hover {
     margin-bottom: 0.3em;
     flex-wrap: wrap;
 }
+.metrics-block-outer {
+    flex: 1 1 0;
+    margin-left: 32px;
+    margin-top: 0.5em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
 .metrics-block {
-    margin-top: 0.7em;
+    margin-top: 0.5em;
+    gap: 0.5em;
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.3em;
 }
 .metric-row {
     display: flex;
-    align-items: center;
-    gap: 0.7em;
+    align-items: flex-end;
+    gap: 1.2em;
+    margin-bottom: 0.2em;
     font-size: 1em;
 }
 .metric-label {
@@ -472,46 +481,12 @@ a:hover {
 .metric-bar-max { right: 0; }
 .metric-bar-fill {
     display: block;
-    height: 100%;
+    height: 12px;
     background: linear-gradient(90deg,#2196f3,#3b5ca8);
     border-radius: 3px;
     transition: width 0.2s;
     position: relative;
-    top: -4px;
-    left: -1px;
-    width: calc(100% + 2px);
-}
-
-.fitness-bar {
-    position: relative;
-    width: 28px;
-    height: 64px;
-    margin: 0 16px 0 0;
-    background: #e6eaf3;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    overflow: visible;
-}
-.fitness-bar-max, .fitness-bar-min {
-    color: #bbb;
-    font-size: 0.85em;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    pointer-events: none;
-}
-.fitness-bar-max { top: -1.2em; }
-.fitness-bar-min { top: 100%; }
-.fitness-bar-fill {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    width: 100%;
-    background: linear-gradient(180deg, #2196f3 0%, #3b5ca8 100%);
-    border-radius: 4px 4px 0 0;
-    transition: height 0.2s;
+    width: 80px;
 }
 
 .node-select-area {
@@ -579,18 +554,22 @@ a:hover {
     width: 12px;
     min-width: 12px;
     max-width: 12px;
-    margin-right: 1.2em;
     border-radius: 7px;
     border: 2px solid orange;
-    background: #e6eaf3;
-    position: absolute;
     left: 0; top: 0; bottom: 0;
-    height: 100%;
     align-self: stretch;
+    position: relative;
+    width: 28px;
+    height: 100%;
+    min-height: 80px;
+    margin: 2em 0 0 1em;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    overflow: hidden;
+    align-items: flex-end;
+    background: #e6eaf3;
+    border-radius: 4px;
+    overflow: visible;
 }
 .fitness-bar-fill {
     border-radius: 6px;
@@ -600,49 +579,24 @@ a:hover {
     left: 0; right: 0; bottom: 0;
     transition: height 0.2s;
 }
-
-.metrics-block {
-    margin-top: 0.7em;
+.fitness-bar-max, .fitness-bar-min {
+    color: #bbb;
+    font-size: 0.85em;
+    position: absolute;
+    right: 0;
+    left: auto;
+    pointer-events: none;
+    text-align: right;
+}
+.fitness-bar-max { top: -1.2em; }
+.fitness-bar-min { top: 100%; }
+.fitness-bar-fill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3em;
-}
-.metric-row {
-    display: flex;
-    align-items: center;
-    gap: 0.7em;
-    font-size: 1em;
-}
-.metric-label {
-    min-width: 70px;
-    font-weight: 500;
-    color: #444;
-}
-[data-theme="dark"] .metric-label {
-    color: #e6eaf3;
-}
-.metric-value {
-    min-width: 70px;
-    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
-}
-.metric-bar {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: 0.5em;
-    width: 90px;
-    height: 12px;
-    background: #e6eaf3;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 2px solid #2196f3;
-}
-.metric-bar-fill {
-    display: inline-block;
-    height: 100%;
-    background: linear-gradient(90deg,#2196f3,#3b5ca8);
-    border-radius: 6px;
-    transition: width 0.2s;
+    background: linear-gradient(180deg, #2196f3 0%, #3b5ca8 100%);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.2s;
 }
 
 .list-summary-bar {
@@ -837,39 +791,6 @@ a:hover {
   min-height: 80px;
   align-items: stretch;
   gap: 32px !important;
-}
-.fitness-bar {
-  position: relative;
-  width: 28px;
-  height: 100%;
-  min-height: 80px;
-  margin: 0 28px 0 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-end;
-  background: #e6eaf3;
-  border-radius: 4px;
-  overflow: visible;
-}
-.fitness-bar-max, .fitness-bar-min {
-  color: #bbb;
-  font-size: 0.85em;
-  position: absolute;
-  right: 0;
-  left: auto;
-  pointer-events: none;
-  text-align: right;
-}
-.fitness-bar-max { top: -1.2em; }
-.fitness-bar-min { top: 100%; }
-.fitness-bar-fill {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  width: 100%;
-  background: linear-gradient(180deg, #2196f3 0%, #3b5ca8 100%);
-  border-radius: 4px 4px 0 0;
-  transition: height 0.2s;
 }
 
 /* --- NODE LIST: Spacing between fitness bar, meta, and metrics --- */

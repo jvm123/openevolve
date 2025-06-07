@@ -347,19 +347,23 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             perfSummary.className = 'list-summary-bar';
             perfDiv.insertBefore(perfSummary, perfDiv.firstChild);
         }
-        perfSummary.style.paddingTop = '2.2em';
+        perfSummary.style.paddingTop = '';
         perfSummary.innerHTML = `
-          <div class="summary-block">
+          <div class="summary-block" style="display:flex;align-items:center;gap:1.2em;min-width:220px;">
             <span class="summary-icon">🏆</span>
-            <span class="summary-label">Top score</span>
-            <span class="summary-value">${topScore.toFixed(4)}</span>
-            ${renderMetricBar(topScore, minScore, maxScore)}
+            <span style="display:flex;align-items:center;gap:0.7em;width:100%;">
+              <span class="summary-label" style="min-width:90px;text-align:left;">Top score</span>
+              <span class="summary-value" style="min-width:90px;text-align:right;">${topScore.toFixed(4)}</span>
+              <span style="flex:1;min-width:90px;">${renderMetricBar(topScore, minScore, maxScore)}</span>
+            </span>
           </div>
-          <div class="summary-block">
+          <div class="summary-block" style="display:flex;align-items:center;gap:1.2em;min-width:220px;">
             <span class="summary-icon">📊</span>
-            <span class="summary-label">Average</span>
-            <span class="summary-value">${avgScore.toFixed(4)}</span>
-            ${renderMetricBar(avgScore, minScore, maxScore)}
+            <span style="display:flex;align-items:center;gap:0.7em;width:100%;">
+              <span class="summary-label" style="min-width:90px;text-align:left;">Average</span>
+              <span class="summary-value" style="min-width:90px;text-align:right;">${avgScore.toFixed(4)}</span>
+              <span style="flex:1;min-width:90px;">${renderMetricBar(avgScore, minScore, maxScore)}</span>
+            </span>
           </div>
         `;
     }
