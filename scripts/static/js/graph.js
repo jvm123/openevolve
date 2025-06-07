@@ -1,5 +1,5 @@
 import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
-import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky } from './sidebar.js';
+import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky, hideSidebar } from './sidebar.js';
 import { renderNodeList } from './list.js';
 
 // --- Utility: scroll and select node by id in any view ---
