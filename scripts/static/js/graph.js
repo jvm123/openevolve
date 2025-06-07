@@ -1,7 +1,3 @@
-// D3 globals for graph rendering
-export let svg = d3.select('#graph-svg');
-export let g = svg.append('g');
-
 import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
 import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky } from './sidebar.js';
 import { renderNodeList } from './list.js';
@@ -90,7 +86,30 @@ export function selectProgram(programId) {
     });
 }
 
+let svg = null;
+let g = null;
+
+function ensureGraphSvg(width, height) {
+    let svgEl = d3.select('#graph').select('svg');
+    if (svgEl.empty()) {
+        svgEl = d3.select('#graph').append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('id', 'graph-svg');
+    } else {
+        svgEl.attr('width', width).attr('height', height);
+    }
+    let gEl = svgEl.select('g');
+    if (gEl.empty()) {
+        gEl = svgEl.append('g');
+    }
+    return { svg: svgEl, g: gEl };
+}
+
 function renderGraph(data) {
+    const { svg: svgEl, g: gEl } = ensureGraphSvg(width, height);
+    svg = svgEl;
+    g = gEl;
     g.selectAll("*").remove();
     const simulation = d3.forceSimulation(data.nodes)
         .force("link", d3.forceLink(data.edges).id(d => d.id).distance(80))
@@ -213,23 +232,4 @@ function dragended(event, d) {
     }
 }
 
-// Click background to unselect node and reset sidebar (and hide sidebar)
-svg.on("click", function(event) {
-    if (event.target === svg.node()) {
-        setSelectedProgramId(null);
-        showSidebarContent(null);
-        setSidebarSticky(false);
-        // Reset all node highlights and remove highlight classes
-        const nodes = g.selectAll("circle");
-        nodes.each(function() {
-            d3.select(this)
-                .classed("node-selected", false)
-                .classed("node-hovered", false)
-                .transition().duration(200)
-                .attr("stroke", getComputedStyle(document.documentElement).getPropertyValue('--node-stroke').trim() || "#fff")
-                .attr("stroke-width", 1.5);
-        });
-    }
-});
-
-export { renderGraph };
+export { renderGraph, g };
