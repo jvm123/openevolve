@@ -1,5 +1,5 @@
 // Import shared state and helpers from main.js
-import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes } from './main.js';
+import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, selectedProgramId, setSelectedProgramId } from './main.js';
 import { scrollAndSelectNodeById } from './graph.js';
 
 // Sidebar logic (automatic show/hide)
@@ -97,7 +97,7 @@ export function showSidebarContent(d, fromHover = false) {
     // X button logic: also clear selection
     const closeBtnEl = document.getElementById('sidebar-close-btn');
     if (closeBtnEl) closeBtnEl.onclick = function() {
-        selectedProgramId = null;
+        setSelectedProgramId(null);
         sidebarSticky = false;
         hideSidebar();
     };
