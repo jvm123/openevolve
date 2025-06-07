@@ -92,8 +92,19 @@ function resize() {
     width = window.innerWidth;
     const toolbarHeight = document.getElementById('toolbar').offsetHeight;
     height = window.innerHeight - toolbarHeight;
-    svg.attr("width", width).attr("height", height);
-    fetchAndRender();
+    // Re-render the graph with new width/height and latest data
+    // allNodeData may be [] on first load, so only re-render if nodes exist
+    if (allNodeData && allNodeData.length > 0) {
+        // Find edges from lastDataStr if possible, else from allNodeData
+        let edges = [];
+        if (typeof lastDataStr === 'string') {
+            try {
+                const parsed = JSON.parse(lastDataStr);
+                edges = parsed.edges || [];
+            } catch {}
+        }
+        renderGraph({ nodes: allNodeData, edges });
+    }
 }
 window.addEventListener('resize', resize);
 

@@ -161,7 +161,18 @@ h1 span { font-size: 0.5em; color: #666; }
     font-size: 1em;
     margin-left: 0.5em;
 }
-#graph { width: 100vw; height: 100vh; }
+#graph {
+    width: 100vw;
+    height: calc(100vh - var(--toolbar-height));
+    min-height: 300px;
+    position: relative;
+    overflow: hidden;
+}
+#graph svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
 .node circle { stroke: var(--node-stroke); stroke-width: 2px; }
 .node text { pointer-events: none; font-size: 12px; }
 .link { stroke: #999; stroke-opacity: 0.6; }

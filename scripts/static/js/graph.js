@@ -99,7 +99,8 @@ export function selectProgram(programId) {
 let svg = null;
 let g = null;
 
-function ensureGraphSvg(width, height) {
+function ensureGraphSvg() {
+    // Always get latest width/height from main.js
     let svgEl = d3.select('#graph').select('svg');
     if (svgEl.empty()) {
         svgEl = d3.select('#graph').append('svg')
@@ -117,7 +118,7 @@ function ensureGraphSvg(width, height) {
 }
 
 function renderGraph(data) {
-    const { svg: svgEl, g: gEl } = ensureGraphSvg(width, height);
+    const { svg: svgEl, g: gEl } = ensureGraphSvg();
     svg = svgEl;
     g = gEl;
     g.selectAll("*").remove();
