@@ -433,19 +433,13 @@ a:hover {
     gap: 0.5em;
 }
 .metrics-block {
-    margin-top: 0.5em;
-    gap: 0.5em;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-.metric-row {
     display: grid;
     grid-template-columns: minmax(70px,auto) minmax(70px,auto) minmax(80px,auto);
-    align-items: center;
-    gap: 1.2em;
-    margin-bottom: 0.2em;
-    font-size: 1em;
+    gap: 0.5em 1.2em;
+    width: 100%;
+}
+.metric-row {
+    display: contents;
 }
 .metric-label {
     min-width: 70px;
@@ -460,6 +454,7 @@ a:hover {
 .metric-value {
     min-width: 70px;
     font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+    text-align: left;
     grid-column: 2;
 }
 .metric-bar {
@@ -473,6 +468,7 @@ a:hover {
     overflow: hidden;
     border: 2px solid #2196f3;
     margin-left: 0;
+    text-align: left;
     grid-column: 3;
 }
 .metric-bar-min, .metric-bar-max {
@@ -816,11 +812,59 @@ a:hover {
   gap: 0.5em;
 }
 .metrics-block {
-  margin-top: 0.5em;
-  gap: 0.5em;
+  display: grid;
+  grid-template-columns: minmax(70px,auto) minmax(70px,auto) minmax(80px,auto);
+  gap: 0.5em 1.2em;
+  width: 100%;
 }
 .metric-row {
-  align-items: flex-end;
-  gap: 1.2em;
-  margin-bottom: 0.2em;
+  display: contents;
+}
+.metric-label {
+  min-width: 70px;
+  font-weight: 500;
+  color: #444;
+  text-align: left;
+  grid-column: 1;
+}
+[data-theme="dark"] .metric-label {
+  color: #e6eaf3;
+}
+.metric-value {
+  min-width: 70px;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
+  text-align: left;
+  grid-column: 2;
+}
+.metric-bar {
+  position: relative;
+  display: inline-block;
+  width: 80px;
+  height: 12px;
+  vertical-align: middle;
+  background: #e6eaf3;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 2px solid #2196f3;
+  margin-left: 0;
+  text-align: left;
+  grid-column: 3;
+}
+.metric-bar-min, .metric-bar-max {
+  color: #bbb;
+  font-size: 0.85em;
+  position: absolute;
+  top: -1.2em;
+  pointer-events: none;
+}
+.metric-bar-min { left: 0; }
+.metric-bar-max { right: 0; }
+.metric-bar-fill {
+  display: block;
+  height: 12px;
+  background: linear-gradient(90deg,#2196f3,#3b5ca8);
+  border-radius: 3px;
+  transition: width 0.2s;
+  position: relative;
+  width: 80px;
 }
