@@ -455,6 +455,10 @@ function renderGraph(data) {
                 .classed('node-hovered', false)
                 .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
                 .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
+            // Hide sidebar if no node is selected
+            if (!selectedProgramId) {
+                hideSidebar();
+            }
         })
         .call(d3.drag()
             .on("start", dragstarted)
@@ -1181,6 +1185,10 @@ function updateListRowBackgroundsForTheme() {
                         .classed('node-hovered', false)
                         .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
                         .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
+                    // Hide sidebar if no node is selected
+                    if (!selectedProgramId) {
+                        hideSidebar();
+                    }
                 })
                 .on('click', function(event, d) {
                     event.preventDefault();
@@ -1288,6 +1296,10 @@ function updateListRowBackgroundsForTheme() {
                     .classed('node-hovered', false)
                     .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
                     .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
+                // Hide sidebar if no node is selected
+                if (!selectedProgramId) {
+                    hideSidebar();
+                }
             })
             .on('click', function(event, d) {
                 event.preventDefault();
