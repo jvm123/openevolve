@@ -1,14 +1,11 @@
 // main.js for OpenEvolve Evolution Visualizer
 
 import { sidebarSticky, showSidebarContent } from './sidebar.js';
-// Import missing functions from list.js and graph.js
-import { updateListSidebarLayout, updateListRowBackgroundsForTheme, renderNodeList } from './list.js';
+import { updateListSidebarLayout, /*updateListRowBackgroundsForTheme,*/ renderNodeList } from './list.js';
 import { renderGraph, g, getNodeRadius } from './graph.js';
 
-// Declare allNodeData at the very top to avoid ReferenceError
 export let allNodeData = [];
 
-// --- Store archive list globally for highlight logic ---
 let archiveProgramIds = [];
 
 const sidebarEl = document.getElementById('sidebar');
@@ -20,22 +17,18 @@ function formatMetrics(metrics) {
     return Object.entries(metrics).map(([k, v]) => `<b>${k}</b>: ${v}`).join('<br>');
 }
 
-// Shared metric bar rendering for summary and node metrics, with min/max labels ---
 function renderMetricBar(value, min, max, opts={}) {
     let percent = 0;
     if (typeof value === 'number' && isFinite(value) && max > min) {
         percent = (value - min) / (max - min);
         percent = Math.max(0, Math.min(1, percent));
     }
-    // Min/max labels: always present, rely on CSS for position
     let minLabel = `<span class="metric-bar-min">${min.toFixed(2)}</span>`;
     let maxLabel = `<span class="metric-bar-max">${max.toFixed(2)}</span>`;
     if (opts.vertical) {
-        // For fitness bar, show min/max at top right/bottom right
         minLabel = `<span class="fitness-bar-min" style="right:0;left:auto;">${min.toFixed(2)}</span>`;
         maxLabel = `<span class="fitness-bar-max" style="right:0;left:auto;">${max.toFixed(2)}</span>`;
     }
-    // Ensure min/max are always visible by not hiding them with overflow
     return `<span class="metric-bar${opts.vertical ? ' vertical' : ''}" style="overflow:visible;">
         ${minLabel}${maxLabel}
         <span class="metric-bar-fill" style="width:${Math.round(percent*100)}%"></span>
@@ -43,7 +36,6 @@ function renderMetricBar(value, min, max, opts={}) {
 }
 
 
-// Patch fetchAndRender to update node list
 function fetchAndRender() {
     fetch('/api/data')
         .then(resp => resp.json())
@@ -58,7 +50,7 @@ function fetchAndRender() {
             renderNodeList(data.nodes);
             document.getElementById('checkpoint-label').textContent =
                 "Checkpoint: " + data.checkpoint_dir;
-            // update metric-select options. keep the selected option.
+            // Update metric-select options. Keep the selected option.
             const metricSelect = document.getElementById('metric-select');
             const highlightSelect = document.getElementById('highlight-select');
             const currentMetric = metricSelect.value;
@@ -84,7 +76,6 @@ function fetchAndRender() {
 fetchAndRender();
 setInterval(fetchAndRender, 2000); // Live update every 2s
 
-// Responsive resize
 export let width = window.innerWidth;
 export let height = window.innerHeight;
 

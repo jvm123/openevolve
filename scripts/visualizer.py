@@ -54,7 +54,12 @@ def load_evolution_data(checkpoint_folder):
             edges.append({"source": parent_id, "target": prog["id"]})
 
     logger.info(f"Loaded {len(nodes)} nodes and {len(edges)} edges from {checkpoint_folder}")
-    return {"archive": meta.get("archive", []), "nodes": nodes, "edges": edges, "checkpoint_dir": checkpoint_folder}
+    return {
+        "archive": meta.get("archive", []),
+        "nodes": nodes,
+        "edges": edges,
+        "checkpoint_dir": checkpoint_folder,
+    }
 
 
 @app.route("/")

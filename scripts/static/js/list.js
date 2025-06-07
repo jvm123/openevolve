@@ -1,12 +1,9 @@
-// Import shared state and helpers from main.js
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, getSelectedMetric, setAllNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
 import { showSidebar, setSidebarSticky, showSidebarContent } from './sidebar.js';
 import { selectProgram, scrollAndSelectNodeById } from './graph.js';
 
 // Node list rendering and logic
-function getNodeBackgroundLight(d, min = 120, max = 230) {
-    // min: darkest, max: lightest (0-255)
-    // Invert logic: better scores are lighter
+/*function getNodeBackgroundLight(d, min = 120, max = 230) {
     let minScore = Infinity, maxScore = -Infinity;
     const metric = getSelectedMetric();
     if (Array.isArray(allNodeData) && allNodeData.length > 0) {
@@ -23,7 +20,6 @@ function getNodeBackgroundLight(d, min = 120, max = 230) {
         maxScore = 1;
     }
     let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
-    // If no score, use the darkest color (worst)
     if (score === null || isNaN(score)) {
         return `rgb(${min},${min},${min})`;
     }
@@ -31,13 +27,12 @@ function getNodeBackgroundLight(d, min = 120, max = 230) {
         const g = Math.round((min+max)/2);
         return `rgb(${g},${g},${g})`;
     }
-    // Invert: higher score = lighter
     const val = Math.round(max - (max - min) * (maxScore - score) / (maxScore - minScore));
     return `rgb(${val},${val},${val})`;
-}
+}*/
 
 // For dark mode, update backgrounds using a blue-tinted scale and same logic
-function getNodeBackgroundDark(d, min = 40, max = 120) {
+/*function getNodeBackgroundDark(d, min = 40, max = 120) {
     // min: darkest, max: lightest (0-255)
     let minScore = Infinity, maxScore = -Infinity;
     const metric = getSelectedMetric();
@@ -55,7 +50,6 @@ function getNodeBackgroundDark(d, min = 40, max = 120) {
         maxScore = 1;
     }
     let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
-    // If no score, use the darkest color (worst)
     if (score === null || isNaN(score)) {
         return `rgb(${min},${min+10},${min+20})`;
     }
@@ -63,13 +57,11 @@ function getNodeBackgroundDark(d, min = 40, max = 120) {
         const g = Math.round((min+max)/2);
         return `rgb(${g},${g+10},${g+20})`;
     }
-    // Invert: higher score = lighter
     const val = Math.round(max - (max - min) * (maxScore - score) / (maxScore - minScore));
     return `rgb(${val},${val+10},${val+20})`;
-}
+}*/
 
-// Update node list row backgrounds for current theme/metric/highlight
-export function updateListRowBackgroundsForTheme() {
+/*export function updateListRowBackgroundsForTheme() {
     const container = document.getElementById('node-list-container');
     if (!container) return;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -84,12 +76,11 @@ export function updateListRowBackgroundsForTheme() {
         const nodeId = idDiv.textContent.replace('ID:', '').trim();
         const node = allNodeData.find(n => n.id == nodeId);
         if (node) {
-            // Use inline style with !important to override CSS background
             div.style.setProperty('background', isDark ? getNodeBackgroundDark(node, 40, 120) : getNodeBackgroundLight(node, 120, 230), 'important');
             div.classList.toggle('highlighted', highlightIds.has(nodeId));
         }
     });
-}
+}*/
 
 export function renderNodeList(nodes) {
     setAllNodeData(nodes);
@@ -102,7 +93,6 @@ export function renderNodeList(nodes) {
         filtered = nodes.filter(n => (n.id + '').toLowerCase().includes(search));
     }
     const metric = getSelectedMetric();
-    // Always re-sort if sort is by score and metric changes
     if (sort === 'id') {
         filtered = filtered.slice().sort((a, b) => (a.id + '').localeCompare(b.id + ''));
     } else if (sort === 'generation') {
@@ -113,21 +103,18 @@ export function renderNodeList(nodes) {
         filtered = filtered.slice().sort((a, b) => {
             const aScore = a.metrics && typeof a.metrics[metric] === 'number' ? a.metrics[metric] : -Infinity;
             const bScore = b.metrics && typeof b.metrics[metric] === 'number' ? b.metrics[metric] : -Infinity;
-            return bScore - aScore; // Descending
+            return bScore - aScore;
         });
     }
-    // Highlight logic for list view
     const highlightFilter = document.getElementById('highlight-select').value;
     const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
     const highlightIds = new Set(highlightNodes.map(n => n.id));
-    // For fitness bar scaling
     const allScores = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && !isNaN(x));
     const minScore = allScores.length ? Math.min(...allScores) : 0;
     const maxScore = allScores.length ? Math.max(...allScores) : 1;
-    // Compute summary
     const topScore = allScores.length ? Math.max(...allScores) : 0;
     const avgScore = allScores.length ? (allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
-    // Add summary bar (visually improved, with border, using shared metric bar)
+
     let summaryBar = document.getElementById('list-summary-bar');
     if (!summaryBar) {
         summaryBar = document.createElement('div');
@@ -151,19 +138,16 @@ export function renderNodeList(nodes) {
     `;
     container.innerHTML = '';
     filtered.forEach(node => {
-        // Node row: selectable by clicking anywhere except links
         const row = document.createElement('div');
         row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
         row.setAttribute('data-node-id', node.id); // for parent scroll
         row.tabIndex = 0;
-        // Fitness bar calculation
         let score = node.metrics && typeof node.metrics[metric] === 'number' ? node.metrics[metric] : null;
         let percent = 0;
         if (score !== null && !isNaN(score) && maxScore > minScore) {
             percent = (score - minScore) / (maxScore - minScore);
             percent = Math.max(0, Math.min(1, percent));
         }
-        // Fitness bar HTML (vertical, with min/max at top right/bottom right)
         const bar = document.createElement('div');
         bar.className = 'fitness-bar';
         bar.innerHTML = `
@@ -171,7 +155,6 @@ export function renderNodeList(nodes) {
             <span class="fitness-bar-min">${minScore.toFixed(2)}</span>
             <div class="fitness-bar-fill" style="height:${Math.round(percent * 100)}%;"></div>
         `;
-        // Main info block (ID, Gen, Island, Parent)
         const infoBlock = document.createElement('div');
         infoBlock.className = 'node-info-block';
         infoBlock.innerHTML = `
@@ -180,12 +163,10 @@ export function renderNodeList(nodes) {
             <div><b>Island:</b> ${node.island ?? ''}</div>
             <div><b>Parent:</b> <a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></div>
         `;
-        // Metrics block below, full width
         let metricsHtml = '<div class="metrics-block">';
         if (node.metrics) {
             Object.entries(node.metrics).forEach(([k, v]) => {
                 let val = (typeof v === 'number' && isFinite(v)) ? v.toFixed(4) : v;
-                // Per-metric bar (horizontal, blue), use min/max for this metric
                 let allVals = nodes.map(n => (n.metrics && typeof n.metrics[k] === 'number') ? n.metrics[k] : null).filter(x => x !== null && isFinite(x));
                 let minV = allVals.length ? Math.min(...allVals) : 0;
                 let maxV = allVals.length ? Math.max(...allVals) : 1;
@@ -209,18 +190,18 @@ export function renderNodeList(nodes) {
         metricsBlock.innerHTML = metricsHtml;
         metricsBlock.className = 'metrics-block-outer';
         row.appendChild(metricsBlock);
-        // Row selection logic: select on click anywhere except links
+
         row.onclick = (e) => {
             if (e.target.tagName === 'A') return;
             setSelectedProgramId(node.id);
             window._lastSelectedNodeData = node;
             setSidebarSticky(true);
             renderNodeList(allNodeData);
-            showSidebarContent(node, false); // always update on click
+            showSidebarContent(node, false);
             showSidebarListView();
             selectProgram(selectedProgramId);
         };
-        // Parent link logic for list (now uses scrollAndSelectNodeById)
+        // Parent link logic for list
         setTimeout(() => {
             const parentLink = row.querySelector('.parent-link');
             if (parentLink && parentLink.dataset.parent && parentLink.dataset.parent !== 'None' && parentLink.dataset.parent !== '') {
@@ -232,8 +213,7 @@ export function renderNodeList(nodes) {
         }, 0);
         container.appendChild(row);
     });
-    // Update row backgrounds for theme/metric
-    updateListRowBackgroundsForTheme();
+    //updateListRowBackgroundsForTheme();
 }
 
 // List search/sort events
@@ -250,12 +230,10 @@ highlightSelect.addEventListener('change', function() {
     renderNodeList(allNodeData);
 });
 
-// On page load, set default sort to generation
 if (document.getElementById('list-sort')) {
     document.getElementById('list-sort').value = 'generation';
 }
 
-// Always show sidebar in list view, and adjust node-list width
 const viewList = document.getElementById('view-list');
 const sidebarEl = document.getElementById('sidebar');
 export function updateListSidebarLayout() {
@@ -267,8 +245,6 @@ export function updateListSidebarLayout() {
     }
 }
 
-// Remove monkey-patching of imported showSidebar (ES module imports are read-only)
-// Instead, define a local function and use it in this file only
 function showSidebarListView() {
     if (viewList.style.display !== 'none') {
         sidebarEl.style.transform = 'translateX(0)';

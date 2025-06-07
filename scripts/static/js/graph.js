@@ -2,9 +2,7 @@ import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSe
 import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky, hideSidebar } from './sidebar.js';
 import { renderNodeList } from './list.js';
 
-// --- Utility: scroll and select node by id in any view ---
 export function scrollAndSelectNodeById(nodeId) {
-    // Try list view first
     const container = document.getElementById('node-list-container');
     if (container) {
         const rows = Array.from(container.children);
@@ -21,7 +19,6 @@ export function scrollAndSelectNodeById(nodeId) {
             return true;
         }
     }
-    // Try graph views (branching/performance)
     const node = allNodeData.find(n => n.id == nodeId);
     if (node) {
         setSelectedProgramId(nodeId);
@@ -30,7 +27,6 @@ export function scrollAndSelectNodeById(nodeId) {
         setSidebarSticky(true);
         selectProgram(selectedProgramId);
         updateGraphNodeSelection();
-        // Optionally, center/zoom to node in D3 (not implemented here)
         return true;
     }
     return false;
@@ -211,13 +207,12 @@ function renderGraph(data) {
 
     selectProgram(selectedProgramId);
 
-    // Click background to unselect node and reset sidebar (and hide sidebar)
+    // Click background to unselect node and hide sidebar
     svg.on("click", function(event) {
         if (event.target === svg.node()) {
             setSelectedProgramId(null);
             setSidebarSticky(false);
             hideSidebar();
-            // Reset all node highlights and remove highlight classes
             g.selectAll("circle")
                 .classed("node-selected", false)
                 .classed("node-hovered", false)
@@ -227,7 +222,6 @@ function renderGraph(data) {
     });
 }
 
-// D3 drag handlers
 function dragstarted(event, d) {
     if (!event.active) event.subject.fx = event.subject.x;
     if (!event.active) event.subject.fy = event.subject.y;

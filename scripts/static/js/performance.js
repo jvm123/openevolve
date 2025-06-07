@@ -1,13 +1,10 @@
-// Import shared state and helpers from main.js
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, fetchAndRender, getSelectedMetric, selectedProgramId, setSelectedProgramId } from './main.js';
 import { getNodeRadius, getNodeColor, selectProgram, scrollAndSelectNodeById } from './graph.js';
 import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebarSticky } from './sidebar.js';
 
-// --- Performance Tab D3 Graph ---
 (function() {
     const perfDiv = document.getElementById('view-performance');
     if (!perfDiv) return;
-    // Modern toggle for show islands
     let toggleDiv = document.getElementById('perf-island-toggle');
     if (!toggleDiv) {
         toggleDiv = document.createElement('div');
@@ -25,22 +22,18 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
     function renderPerformanceGraph(nodes) {
         window.renderPerformanceGraph = renderPerformanceGraph;
         d3.select('#performance-graph').remove();
-        // Calculate width: window width - sidebar width - padding
         const sidebarEl = document.getElementById('sidebar');
         const padding = 32;
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         const toolbarHeight = document.getElementById('toolbar').offsetHeight;
         const sidebarWidth = sidebarEl.offsetWidth || 400;
-        // Always fill available window (minus sidebar and padding)
         const width = Math.max(windowWidth - sidebarWidth - padding, 400);
-        const height = Math.max(windowHeight - toolbarHeight - 24, 400); // 24 for some margin
-        // X: metric, Y: generation (downwards, open-ended)
+        const height = Math.max(windowHeight - toolbarHeight - 24, 400);
         const metric = getSelectedMetric();
         const validNodes = nodes.filter(n => n.metrics && typeof n.metrics[metric] === 'number');
         const undefinedNodes = nodes.filter(n => !n.metrics || n.metrics[metric] == null || isNaN(n.metrics[metric]));
         if (!validNodes.length && !undefinedNodes.length) return;
-        // --- ISLAND SPLIT LOGIC ---
         const showIslands = document.getElementById('show-islands-toggle')?.checked;
         let islands = [];
         if (showIslands) {
@@ -48,22 +41,17 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
         } else {
             islands = [null];
         }
-        // Always start with generation 0
         const yExtent = d3.extent(nodes, d => d.generation);
         const minGen = 0;
         const maxGen = yExtent[1];
         const xExtent = d3.extent(validNodes, d => d.metrics[metric]);
         const margin = {top: 60, right: 40, bottom: 40, left: 60};
-        let undefinedBoxWidth = 70; // reduced width
-        const undefinedBoxPad = 54; // increased gap for y-axis
+        let undefinedBoxWidth = 70;
+        const undefinedBoxPad = 54;
         const genCount = (maxGen - minGen + 1) || 1;
-        // Height: one graph per island if split, else one
         const graphHeight = Math.max(400, genCount * 48 + margin.top + margin.bottom);
-        // If window is tall, use all available height
         const totalGraphHeight = showIslands ? (graphHeight * islands.length) : graphHeight;
-        // If window is taller, stretch graph to fill
         const svgHeight = Math.max(height, totalGraphHeight);
-        // Move graph and y-axis further right to avoid overlap
         const graphXOffset = undefinedBoxWidth + undefinedBoxPad;
         const svg = d3.select(perfDiv)
             .append('svg')
@@ -71,7 +59,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             .attr('width', width)
             .attr('height', svgHeight)
             .style('display', 'block');
-        // --- ZOOM/DRAG SUPPORT ---
+
         const g = svg.append('g').attr('class', 'zoom-group');
         svg.call(
             d3.zoom()
@@ -80,18 +68,18 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                     g.attr('transform', event.transform);
                 })
         );
-        // For each island, render its nodes and edges
+
         let yScales = {};
         islands.forEach((island, i) => {
             const y = d3.scaleLinear()
                 .domain([minGen, maxGen]).nice()
                 .range([margin.top + i*graphHeight, margin.top + (i+1)*graphHeight - margin.bottom]);
             yScales[island] = y;
-            // Axis (move right)
+            // Axis
             g.append('g')
                 .attr('transform', `translate(${margin.left+graphXOffset},0)`)
                 .call(d3.axisLeft(y).ticks(Math.min(12, genCount)));
-            // Y axis label (add only for first island or for each if split)
+            // Y axis label
             g.append('text')
                 .attr('transform', `rotate(-90)`)
                 .attr('y', margin.left + 8)
@@ -101,7 +89,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 .attr('font-size', '1em')
                 .attr('fill', '#888')
                 .text('Generation');
-            // Add headline for each island (move further down)
+            // Show a headline for each island
             if (showIslands) {
                 g.append('text')
                     .attr('x', (width + undefinedBoxWidth) / 2)
@@ -114,7 +102,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                     .text(`Island ${island}`);
             }
         });
-        // X axis (shared, move right)
+        // x axis
         const x = d3.scaleLinear()
             .domain([xExtent[0], xExtent[1]]).nice()
             .range([margin.left+graphXOffset, width - margin.right]);
@@ -128,18 +116,15 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             .attr('text-anchor', 'middle')
             .attr('font-size', '1.1em')
             .text(metric);
-        // Highlight logic (same as branching)
         const highlightFilter = document.getElementById('highlight-select').value;
         const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
         const highlightIds = new Set(highlightNodes.map(n => n.id));
-        // Draw single NaN box (left of graph, spanning all islands)
+        // Draw single NaN box left of graphs, spanning all islands
         if (undefinedNodes.length) {
-            // Make the NaN box narrower and transparent, with more gap to the graph
             let undefinedBoxWidth = 70; // reduced width
             const undefinedBoxPad = 54; // increased gap for y-axis
             const boxTop = margin.top;
             const boxBottom = showIslands ? (margin.top + islands.length*graphHeight - margin.bottom) : (margin.top + graphHeight - margin.bottom);
-            // NaN label above the box, centered, smaller font
             g.append('text')
                 .attr('x', margin.left + undefinedBoxWidth/2)
                 .attr('y', boxTop - 10)
@@ -147,7 +132,6 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 .attr('font-size', '0.92em') // smaller font
                 .attr('fill', '#888')
                 .text('NaN');
-            // Transparent box (no fill, only border)
             g.append('rect')
                 .attr('x', margin.left)
                 .attr('y', boxTop)
@@ -174,7 +158,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 .attr('opacity', 0.85)
                 .on('mouseover', function(event, d) {
                     if (!sidebarSticky && (!selectedProgramId || selectedProgramId !== d.id)) {
-                        showSidebarContent(d, true); // only update if not sticky
+                        showSidebarContent(d, true); // Only update if not sticky
                         showSidebar();
                     }
                     d3.select(this)
@@ -186,7 +170,6 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                         .classed('node-hovered', false)
                         .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
                         .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
-                    // Hide sidebar if no node is selected
                     if (!selectedProgramId) {
                         hideSidebar();
                     }
@@ -196,7 +179,6 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                     setSelectedProgramId(d.id);
                     window._lastSelectedNodeData = d;
                     setSidebarSticky(true);
-                    // Remove all node-hovered and node-selected classes
                     g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                         .attr('stroke', function(nd) {
                             return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
@@ -205,15 +187,16 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                             return selectedProgramId === nd.id ? 3 : 1.5;
                         });
                     d3.select(this).classed('node-selected', true);
-                    showSidebarContent(d, false); // always update on click
+                    showSidebarContent(d, false);
                     showSidebar();
                     selectProgram(selectedProgramId);
                     renderPerformanceGraph(nodes);
                 });
         }
+
         // Draw edges (parent-child links, can cross islands)
         const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
-        // New: handle all edge types (defined→defined, defined→undefined, undefined→defined, undefined→undefined)
+
         const edges = nodes.filter(n => n.parent_id && nodeById[n.parent_id]).map(n => {
             return {
                 source: nodeById[n.parent_id],
@@ -228,7 +211,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             .attr('x1', d => {
                 const m = d.source.metrics && typeof d.source.metrics[metric] === 'number' ? d.source.metrics[metric] : null;
                 if (m === null || isNaN(m)) {
-                    // Undefined: in undefined box
+                    // NaN nodes go into the NaN box, generation on the y axis
                     return margin.left + undefinedBoxWidth/2;
                 } else {
                     return x(m);
@@ -238,7 +221,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 const m = d.source.metrics && typeof d.source.metrics[metric] === 'number' ? d.source.metrics[metric] : null;
                 const island = showIslands ? d.source.island : null;
                 if (m === null || isNaN(m)) {
-                    // Undefined: in undefined box, vertical by generation
+                    // Each island with its own graph; generation on the y axis
                     return yScales[island](d.source.generation);
                 } else {
                     return yScales[island](d.source.generation);
@@ -247,7 +230,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             .attr('x2', d => {
                 const m = d.target.metrics && typeof d.target.metrics[metric] === 'number' ? d.target.metrics[metric] : null;
                 if (m === null || isNaN(m)) {
-                    // Undefined: in undefined box
+                    // NaN nodes go into the NaN box, generation on the y axis
                     return margin.left + undefinedBoxWidth/2;
                 } else {
                     return x(m);
@@ -257,7 +240,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 const m = d.target.metrics && typeof d.target.metrics[metric] === 'number' ? d.target.metrics[metric] : null;
                 const island = showIslands ? d.target.island : null;
                 if (m === null || isNaN(m)) {
-                    // Undefined: in undefined box, vertical by generation
+                    // Each island with its own graph; generation on the y axis
                     return yScales[island](d.target.generation);
                 } else {
                     return yScales[island](d.target.generation);
@@ -266,7 +249,8 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             .attr('stroke', '#888')
             .attr('stroke-width', 1.5)
             .attr('opacity', 0.5);
-        // Draw nodes as circles (only valid metric nodes)
+
+        // Draw nodes
         g.append('g')
             .selectAll('circle')
             .data(validNodes)
@@ -285,7 +269,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             .attr('opacity', 0.85)
             .on('mouseover', function(event, d) {
                 if (!sidebarSticky && (!selectedProgramId || selectedProgramId !== d.id)) {
-                    showSidebarContent(d, true); // only update if not sticky
+                    showSidebarContent(d, true); // Only update sidebar content if not sticky
                     showSidebar();
                 }
                 d3.select(this)
@@ -307,7 +291,6 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 setSelectedProgramId(d.id);
                 window._lastSelectedNodeData = d;
                 setSidebarSticky(true);
-                // Remove all node-hovered and node-selected classes
                 g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                     .attr('stroke', function(nd) {
                         return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
@@ -321,7 +304,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 selectProgram(selectedProgramId);
                 renderPerformanceGraph(nodes);
             });
-        // Unselect logic: click background to unselect
+        // Click background to unselect node and hide sidebar
         svg.on('click', function(event) {
             if (event.target === svg.node()) {
                 setSelectedProgramId(null);
@@ -334,7 +317,6 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                     .attr('stroke-width', 1.5);
             }
         });
-        // Summary bar at top (match list tab style)
         let perfSummary = document.getElementById('performance-summary-bar');
         const allScores = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && !isNaN(x));
         const minScore = allScores.length ? Math.min(...allScores) : 0;
@@ -363,7 +345,6 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
           </div>
         `;
     }
-    // Hook into fetchAndRender to update performance graph
     const metricSelect = document.getElementById('metric-select');
     metricSelect.addEventListener('change', function() {
         if (typeof allNodeData !== 'undefined' && allNodeData.length) {
@@ -381,13 +362,13 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             renderPerformanceGraph(allNodeData);
         }
     });
-    // Toggle event
+    // Show islands yes/no toggle event
     document.getElementById('show-islands-toggle').addEventListener('change', function() {
         if (typeof allNodeData !== 'undefined' && allNodeData.length) {
             renderPerformanceGraph(allNodeData);
         }
     });
-    // Responsive resize for performance graph
+    // Responsive resize
     window.addEventListener('resize', function() {
         if (typeof allNodeData !== 'undefined' && allNodeData.length && perfDiv.style.display !== 'none') {
             renderPerformanceGraph(allNodeData);
@@ -395,13 +376,12 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
     });
 })();
 
-// Exported function to select a node by ID and update the performance graph selection
+// Select a node by ID and update graph and sidebar
 export function selectPerformanceNodeById(id) {
     setSelectedProgramId(id);
     setSidebarSticky(true);
     if (typeof allNodeData !== 'undefined' && allNodeData.length) {
         renderPerformanceGraph(allNodeData);
-        // Also update sidebar content
         const node = allNodeData.find(n => n.id == id);
         if (node) showSidebarContent(node, false);
     }

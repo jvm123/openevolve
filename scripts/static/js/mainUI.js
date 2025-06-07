@@ -1,4 +1,4 @@
-import { updateListRowBackgroundsForTheme } from './list.js';
+//import { updateListRowBackgroundsForTheme } from './list.js';
 import { width, height, selectedProgramId } from './main.js';
 import { selectProgram } from './graph.js';
 import { showSidebarContent } from './sidebar.js';
@@ -55,12 +55,12 @@ function setTheme(theme) {
     localStorage.setItem('theme', theme);
     document.getElementById('darkmode-toggle').checked = (theme === 'dark');
     document.getElementById('darkmode-label').textContent = theme === 'dark' ? '🌙' : '☀️';
-    updateListRowBackgroundsForTheme();
+    //updateListRowBackgroundsForTheme();
 }
 function getSystemTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
-// On load, use localStorage or system default
+// On load, use localStorage or system default to determine theme
 (function() {
     let theme = localStorage.getItem('theme');
     if (!theme) theme = getSystemTheme();
@@ -70,7 +70,7 @@ document.getElementById('darkmode-toggle').addEventListener('change', function()
     setTheme(this.checked ? 'dark' : 'light');
 });
 
-// canvas size and zoom setup
+// Canvas size and zoom setup
 let toolbarHeight = document.getElementById('toolbar').offsetHeight;
 
 const svg = d3.select("#graph").append("svg")
