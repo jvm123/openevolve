@@ -387,4 +387,10 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
             renderPerformanceGraph(allNodeData);
         }
     });
+    // Responsive resize for performance graph
+    window.addEventListener('resize', function() {
+        if (typeof allNodeData !== 'undefined' && allNodeData.length && perfDiv.style.display !== 'none') {
+            renderPerformanceGraph(allNodeData);
+        }
+    });
 })();
