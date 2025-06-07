@@ -945,6 +945,15 @@ function updateListRowBackgroundsForTheme() {
             .attr('width', width)
             .attr('height', height)
             .style('display', 'block');
+        // --- ZOOM/DRAG SUPPORT ---
+        const g = svg.append('g').attr('class', 'zoom-group');
+        svg.call(
+            d3.zoom()
+                .scaleExtent([0.2, 10])
+                .on('zoom', function(event) {
+                    g.attr('transform', event.transform);
+                })
+        );
         // For each island, render its nodes and edges
         let yScales = {};
         islands.forEach((island, i) => {
@@ -953,12 +962,12 @@ function updateListRowBackgroundsForTheme() {
                 .range([margin.top + i*graphHeight, margin.top + (i+1)*graphHeight - margin.bottom]);
             yScales[island] = y;
             // Axis
-            svg.append('g')
+            g.append('g')
                 .attr('transform', `translate(${margin.left+undefinedBoxWidth},0)`)
                 .call(d3.axisLeft(y).ticks(Math.min(12, genCount)));
             // Add headline for each island (now inside the graph area)
             if (showIslands) {
-                svg.append('text')
+                g.append('text')
                     .attr('x', (width + undefinedBoxWidth) / 2)
                     .attr('y', margin.top + i*graphHeight + 8)
                     .attr('text-anchor', 'middle')
@@ -973,7 +982,7 @@ function updateListRowBackgroundsForTheme() {
         const x = d3.scaleLinear()
             .domain([xExtent[0], xExtent[1]]).nice()
             .range([margin.left+undefinedBoxWidth, width - margin.right]);
-        svg.append('g')
+        g.append('g')
             .attr('transform', `translate(0,${margin.top})`)
             .call(d3.axisTop(x))
             .append('text')
@@ -993,7 +1002,7 @@ function updateListRowBackgroundsForTheme() {
                 const y = yScales[island];
                 const boxTop = margin.top + i*graphHeight;
                 const boxBottom = margin.top + (i+1)*graphHeight - margin.bottom;
-                svg.append('rect')
+                g.append('rect')
                     .attr('x', margin.left)
                     .attr('y', boxTop)
                     .attr('width', undefinedBoxWidth)
@@ -1003,7 +1012,7 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke-width', 1.5)
                     .attr('rx', 12);
                 // Label
-                svg.append('text')
+                g.append('text')
                     .attr('x', margin.left + undefinedBoxWidth/2)
                     .attr('y', boxTop + 24)
                     .attr('text-anchor', 'middle')
@@ -1011,7 +1020,7 @@ function updateListRowBackgroundsForTheme() {
                     .attr('fill', '#888')
                     .text('undefined score');
                 // Draw nodes in box, vertically by generation
-                svg.append('g')
+                g.append('g')
                     .selectAll('circle')
                     .data(theseNodes)
                     .enter()
@@ -1025,7 +1034,7 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
                     .attr('opacity', 0.85)
                     .on('mouseover', function(event, d) {
-                        if (selectedProgramId === d.id) return;
+                        if (selectedProgramId === d.id)
                         showSidebarContent(d);
                         showSidebar();
                         d3.select(this)
@@ -1033,15 +1042,14 @@ function updateListRowBackgroundsForTheme() {
                             .attr('stroke', '#FFD600').attr('stroke-width', 4);
                     })
                     .on('mouseout', function(event, d) {
-                        if (selectedProgramId === d.id) return;
+                        if (selectedProgramId === d.id)
                         showSidebarContent(null);
                         d3.select(this)
                             .classed('node-hovered', false)
                             .attr('stroke', '#333').attr('stroke-width', 1.5);
                     })
                     .on('click', function(event, d) {
-                        event.preventDefault(); // Prevent page jump
-                        selectedProgramId = d.id;
+                        event.preventDefault();                        selectedProgramId = d.id;
                         window._lastSelectedNodeData = d;
                         showSidebarContent(d);
                         showSidebar();
@@ -1060,7 +1068,7 @@ function updateListRowBackgroundsForTheme() {
             source: nodeById[n.parent_id],
             target: n
         }));
-        svg.append('g')
+        g.append('g')
             .selectAll('line')
             .data(edges)
             .enter()
@@ -1073,7 +1081,7 @@ function updateListRowBackgroundsForTheme() {
             .attr('stroke-width', 1.5)
             .attr('opacity', 0.5);
         // Draw nodes as circles (only valid metric nodes)
-        svg.append('g')
+        g.append('g')
             .selectAll('circle')
             .data(validNodes)
             .enter()
@@ -1098,15 +1106,13 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke', '#FFD600').attr('stroke-width', 4);
             })
             .on('mouseout', function(event, d) {
-                if (selectedProgramId === d.id) return; // Do not revert if selected
-                showSidebarContent(null);
+                if (selectedProgramId === d.id)                showSidebarContent(null);
                 d3.select(this)
                     .classed('node-hovered', false)
                     .attr('stroke', '#333').attr('stroke-width', 1.5);
             })
             .on('click', function(event, d) {
-                event.preventDefault(); // Prevent page jump
-                selectedProgramId = d.id;
+                event.preventDefault();                selectedProgramId = d.id;
                 window._lastSelectedNodeData = d;
                 showSidebarContent(d);
                 showSidebar();
