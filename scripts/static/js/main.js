@@ -62,7 +62,7 @@ function showSidebar() {
 function hideSidebar() {
     sidebar.style.transform = 'translateX(100%)';
     sidebarSticky = false;
-    showSidebarContent(null);
+    // Do NOT call showSidebarContent(null) here to avoid recursion!
 }
 
 // Patch showSidebarContent to only update content on selection, not hover
@@ -73,6 +73,7 @@ function showSidebarContent(d, fromHover = false) {
     if (fromHover && sidebarSticky) return;
     if (!d) {
         sidebarContent.innerHTML = '';
+        // Do NOT call hideSidebar() here to avoid recursion!
         return;
     }
     // Star for MAP-Elite archive
