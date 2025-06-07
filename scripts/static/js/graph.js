@@ -222,6 +222,27 @@ function renderGraph(data) {
     });
 }
 
+export function animateGraphNodeAttributes() {
+    if (!g) return;
+    const metric = getSelectedMetric();
+    const filter = document.getElementById('highlight-select').value;
+    const highlightNodes = getHighlightNodes(allNodeData, filter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+    g.selectAll('circle')
+        .transition().duration(400)
+        .attr('r', d => getNodeRadius(d))
+        .attr('fill', d => getNodeColor(d))
+        .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+        .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+        .attr('opacity', 1)
+        .selection()
+        .each(function(d) {
+            d3.select(this)
+                .classed('node-highlighted', highlightIds.has(d.id))
+                .classed('node-selected', selectedProgramId === d.id);
+        });
+}
+
 function dragstarted(event, d) {
     if (!event.active) event.subject.fx = event.subject.x;
     if (!event.active) event.subject.fy = event.subject.y;

@@ -2,7 +2,7 @@
 
 import { sidebarSticky, showSidebarContent } from './sidebar.js';
 import { updateListSidebarLayout, renderNodeList } from './list.js';
-import { renderGraph, g, getNodeRadius } from './graph.js';
+import { renderGraph, g, getNodeRadius, animateGraphNodeAttributes } from './graph.js';
 
 export let allNodeData = [];
 
@@ -147,23 +147,14 @@ function getSelectedMetric() {
 // Add event listener to re-highlight nodes on highlight-select change (no full rerender)
 const highlightSelect = document.getElementById('highlight-select');
 highlightSelect.addEventListener('change', function() {
-    // Only update highlight classes, do not rerender graph
-    const metric = getSelectedMetric();
-    const filter = highlightSelect.value;
-    // Use allNodeData for current nodes
-    const highlightNodes = getHighlightNodes(allNodeData, filter, metric);
-    const highlightIds = new Set(highlightNodes.map(n => n.id));
-    // Update graph view
-    g.selectAll('circle').each(function(d) {
-        d3.select(this).classed('node-highlighted', highlightIds.has(d.id));
-    });
+    animateGraphNodeAttributes();
     // Update list view
     const container = document.getElementById('node-list-container');
     if (container) {
         Array.from(container.children).forEach(div => {
             const nodeId = div.innerHTML.match(/<b>ID:<\/b>\s*([^<]+)/);
             if (nodeId && nodeId[1]) {
-                div.classList.toggle('highlighted', highlightIds.has(nodeId[1]));
+                div.classList.toggle('highlighted', getHighlightNodes(allNodeData, highlightSelect.value, getSelectedMetric()).map(n => n.id).includes(nodeId[1]));
             }
         });
     }
@@ -172,17 +163,7 @@ highlightSelect.addEventListener('change', function() {
 // Add event listener to re-highlight nodes and update radii on metric-select change (no full rerender)
 const metricSelect = document.getElementById('metric-select');
 metricSelect.addEventListener('change', function() {
-    const metric = getSelectedMetric();
-    const filter = highlightSelect.value;
-    // Update highlight classes and radii
-    const highlightNodes = getHighlightNodes(allNodeData, filter, metric);
-    const highlightIds = new Set(highlightNodes.map(n => n.id));
-    g.selectAll('circle').each(function(d) {
-        d3.select(this)
-            .classed('node-highlighted', highlightIds.has(d.id))
-            .attr('r', getNodeRadius(d));
-    });
-    // Update list view backgrounds and highlights, and re-render for sort by score
+    animateGraphNodeAttributes();
     renderNodeList(allNodeData);
 });
 

@@ -348,12 +348,14 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
     const metricSelect = document.getElementById('metric-select');
     metricSelect.addEventListener('change', function() {
         if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            animatePerformanceNodeAttributes();
             renderPerformanceGraph(allNodeData);
         }
     });
     const highlightSelect = document.getElementById('highlight-select');
     highlightSelect.addEventListener('change', function() {
         if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            animatePerformanceNodeAttributes();
             renderPerformanceGraph(allNodeData);
         }
     });
@@ -375,6 +377,28 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
         }
     });
 })();
+
+export function animatePerformanceNodeAttributes() {
+    const svg = d3.select('#performance-graph');
+    if (svg.empty()) return;
+    const metric = getSelectedMetric();
+    const highlightFilter = document.getElementById('highlight-select').value;
+    const highlightNodes = getHighlightNodes(allNodeData, highlightFilter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+    svg.selectAll('circle')
+        .transition().duration(400)
+        .attr('r', d => typeof d.metrics === 'object' ? getNodeRadius(d) : 8)
+        .attr('fill', d => getNodeColor(d))
+        .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+        .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+        .attr('opacity', 0.85)
+        .selection()
+        .each(function(d) {
+            d3.select(this)
+                .classed('node-highlighted', highlightIds.has(d.id))
+                .classed('node-selected', selectedProgramId === d.id);
+        });
+}
 
 // Select a node by ID and update graph and sidebar
 export function selectPerformanceNodeById(id) {
