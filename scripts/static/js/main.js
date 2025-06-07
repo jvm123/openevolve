@@ -1034,22 +1034,25 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
                     .attr('opacity', 0.85)
                     .on('mouseover', function(event, d) {
-                        if (selectedProgramId === d.id)
-                        showSidebarContent(d);
-                        showSidebar();
+                        if (!selectedProgramId) {
+                            showSidebarContent(d);
+                            showSidebar();
+                        }
                         d3.select(this)
                             .classed('node-hovered', true)
                             .attr('stroke', '#FFD600').attr('stroke-width', 4);
                     })
                     .on('mouseout', function(event, d) {
-                        if (selectedProgramId === d.id)
-                        showSidebarContent(null);
+                        if (!selectedProgramId) {
+                            showSidebarContent(null);
+                        }
                         d3.select(this)
                             .classed('node-hovered', false)
                             .attr('stroke', '#333').attr('stroke-width', 1.5);
                     })
                     .on('click', function(event, d) {
-                        event.preventDefault();                        selectedProgramId = d.id;
+                        event.preventDefault();
+                        selectedProgramId = d.id;
                         window._lastSelectedNodeData = d;
                         showSidebarContent(d);
                         showSidebar();
@@ -1064,19 +1067,56 @@ function updateListRowBackgroundsForTheme() {
         const highlightIds = new Set(highlightNodes.map(n => n.id));
         // Draw edges (parent-child links, can cross islands)
         const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
-        const edges = nodes.filter(n => n.parent_id && nodeById[n.parent_id] && n.metrics && typeof n.metrics[metric] === 'number' && nodeById[n.parent_id].metrics && typeof nodeById[n.parent_id].metrics[metric] === 'number').map(n => ({
-            source: nodeById[n.parent_id],
-            target: n
-        }));
+        // New: handle all edge types (defined→defined, defined→undefined, undefined→defined, undefined→undefined)
+        const edges = nodes.filter(n => n.parent_id && nodeById[n.parent_id]).map(n => {
+            return {
+                source: nodeById[n.parent_id],
+                target: n
+            };
+        });
         g.append('g')
             .selectAll('line')
             .data(edges)
             .enter()
             .append('line')
-            .attr('x1', d => x(d.source.metrics[metric]))
-            .attr('y1', d => showIslands ? yScales[d.source.island](d.source.generation) : yScales[null](d.source.generation))
-            .attr('x2', d => x(d.target.metrics[metric]))
-            .attr('y2', d => showIslands ? yScales[d.target.island](d.target.generation) : yScales[null](d.target.generation))
+            .attr('x1', d => {
+                const m = d.source.metrics && typeof d.source.metrics[metric] === 'number' ? d.source.metrics[metric] : null;
+                if (m === null || isNaN(m)) {
+                    // Undefined: in undefined box
+                    return margin.left + undefinedBoxWidth/2;
+                } else {
+                    return x(m);
+                }
+            })
+            .attr('y1', d => {
+                const m = d.source.metrics && typeof d.source.metrics[metric] === 'number' ? d.source.metrics[metric] : null;
+                const island = showIslands ? d.source.island : null;
+                if (m === null || isNaN(m)) {
+                    // Undefined: in undefined box, vertical by generation
+                    return yScales[island](d.source.generation);
+                } else {
+                    return yScales[island](d.source.generation);
+                }
+            })
+            .attr('x2', d => {
+                const m = d.target.metrics && typeof d.target.metrics[metric] === 'number' ? d.target.metrics[metric] : null;
+                if (m === null || isNaN(m)) {
+                    // Undefined: in undefined box
+                    return margin.left + undefinedBoxWidth/2;
+                } else {
+                    return x(m);
+                }
+            })
+            .attr('y2', d => {
+                const m = d.target.metrics && typeof d.target.metrics[metric] === 'number' ? d.target.metrics[metric] : null;
+                const island = showIslands ? d.target.island : null;
+                if (m === null || isNaN(m)) {
+                    // Undefined: in undefined box, vertical by generation
+                    return yScales[island](d.target.generation);
+                } else {
+                    return yScales[island](d.target.generation);
+                }
+            })
             .attr('stroke', '#888')
             .attr('stroke-width', 1.5)
             .attr('opacity', 0.5);
@@ -1098,21 +1138,25 @@ function updateListRowBackgroundsForTheme() {
             .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
             .attr('opacity', 0.85)
             .on('mouseover', function(event, d) {
-                if (selectedProgramId === d.id) return; // Do not apply hover if selected
-                showSidebarContent(d);
-                showSidebar();
+                if (!selectedProgramId) {
+                    showSidebarContent(d);
+                    showSidebar();
+                }
                 d3.select(this)
                     .classed('node-hovered', true)
                     .attr('stroke', '#FFD600').attr('stroke-width', 4);
             })
             .on('mouseout', function(event, d) {
-                if (selectedProgramId === d.id)                showSidebarContent(null);
+                if (!selectedProgramId) {
+                    showSidebarContent(null);
+                }
                 d3.select(this)
                     .classed('node-hovered', false)
                     .attr('stroke', '#333').attr('stroke-width', 1.5);
             })
             .on('click', function(event, d) {
-                event.preventDefault();                selectedProgramId = d.id;
+                event.preventDefault();
+                selectedProgramId = d.id;
                 window._lastSelectedNodeData = d;
                 showSidebarContent(d);
                 showSidebar();
