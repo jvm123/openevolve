@@ -134,7 +134,6 @@ function getSelectedMetric() {
 }
 
 function getNodeRadius(d) {
-    // Find min and max metric values in the dataset
     let minScore = Infinity, maxScore = -Infinity;
     let minR = 10, maxR = 32;
     const metric = getSelectedMetric();
@@ -157,7 +156,6 @@ function getNodeRadius(d) {
     if (score === null || isNaN(score)) {
         return minR / 2;
     }
-    // Prevent division by zero
     if (maxScore === minScore) return (minR + maxR) / 2;
     score = Math.max(minScore, Math.min(maxScore, score));
     return minR + (maxR - minR) * (score - minScore) / (maxScore - minScore);
@@ -395,15 +393,6 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// Re-render graph when metric-select changes
-document.getElementById('metric-select').addEventListener('change', function() {
-    fetch('/api/data')
-        .then(resp => resp.json())
-        .then(data => {
-            renderGraph(data);
-        });
-});
-
 // Highlight logic for graph and list views
 function getHighlightNodes(nodes, filter, metric) {
     if (!filter) return [];
@@ -456,6 +445,31 @@ highlightSelect.addEventListener('change', function() {
     // Update graph view
     g.selectAll('circle').each(function(d) {
         d3.select(this).classed('node-highlighted', highlightIds.has(d.id));
+    });
+    // Update list view
+    const container = document.getElementById('node-list-container');
+    if (container) {
+        Array.from(container.children).forEach(div => {
+            const nodeId = div.innerHTML.match(/<b>ID:<\/b>\s*([^<]+)/);
+            if (nodeId && nodeId[1]) {
+                div.classList.toggle('highlighted', highlightIds.has(nodeId[1]));
+            }
+        });
+    }
+});
+
+// Add event listener to re-highlight nodes and update radii on metric-select change (no full rerender)
+const metricSelect = document.getElementById('metric-select');
+metricSelect.addEventListener('change', function() {
+    const metric = getSelectedMetric();
+    const filter = highlightSelect.value;
+    // Update highlight classes
+    const highlightNodes = getHighlightNodes(allNodeData, filter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+    g.selectAll('circle').each(function(d) {
+        d3.select(this)
+            .classed('node-highlighted', highlightIds.has(d.id))
+            .attr('r', getNodeRadius(d));
     });
     // Update list view
     const container = document.getElementById('node-list-container');
