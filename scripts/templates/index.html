@@ -48,11 +48,12 @@
     </div>
     <div id="view-list" style="display:none;padding-top:3.5em;">
         <div style="display:flex;align-items:center;gap:1em;margin-bottom:1em;">
-            <input id="list-search" type="text" placeholder="Search Program ID..." style="font-size:1em;padding:0.4em 1em;border-radius:6px;border:1px solid #ccc;min-width:220px;">
+            <input id="list-search" type="text" placeholder="Search program ID..." style="font-size:1em;padding:0.4em 1em;border-radius:6px;border:1px solid #ccc;min-width:220px;">
             <select id="list-sort" style="font-size:1em;padding:0.3em 1em;border-radius:6px;border:1px solid #ccc;">
                 <option value="id">Sort by ID</option>
-                <option value="generation">Sort by Generation</option>
-                <option value="island">Sort by Island</option>
+                <option value="generation" selected>Sort by generation</option>
+                <option value="island">Sort by island</option>
+                <option value="score">Sort by score</option>
             </select>
         </div>
         <div id="node-list-container"></div>

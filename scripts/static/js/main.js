@@ -1,5 +1,8 @@
 // main.js for OpenEvolve Evolution Visualizer
 
+// Declare allNodeData at the very top to avoid ReferenceError
+let allNodeData = [];
+
 const darkToggleContainer = document.getElementById('darkmode-toggle').parentElement;
 const darkToggleInput = document.getElementById('darkmode-toggle');
 const darkToggleLabel = document.getElementById('darkmode-label');
@@ -61,6 +64,7 @@ function setTheme(theme) {
     localStorage.setItem('theme', theme);
     document.getElementById('darkmode-toggle').checked = (theme === 'dark');
     document.getElementById('darkmode-label').textContent = theme === 'dark' ? '🌙' : '☀️';
+    updateListRowBackgroundsForTheme();
 }
 function getSystemTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -292,7 +296,94 @@ svg.on("click", function(event) {
 });
 
 // Node list rendering and logic
-let allNodeData = [];
+function getNodeGray(d, minGray = 120, maxGray = 230) {
+    // minGray: darkest, maxGray: lightest (0-255)
+    // Invert logic: better scores are lighter
+    let minScore = Infinity, maxScore = -Infinity;
+    const metric = getSelectedMetric();
+    if (Array.isArray(allNodeData) && allNodeData.length > 0) {
+        allNodeData.forEach(n => {
+            if (n.metrics && typeof n.metrics[metric] === "number") {
+                if (n.metrics[metric] < minScore) minScore = n.metrics[metric];
+                if (n.metrics[metric] > maxScore) maxScore = n.metrics[metric];
+            }
+        });
+        if (minScore === Infinity) minScore = 0;
+        if (maxScore === -Infinity) maxScore = 1;
+    } else {
+        minScore = 0;
+        maxScore = 1;
+    }
+    let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
+    // If no score, use the darkest color (worst)
+    if (score === null || isNaN(score)) {
+        return `rgb(${minGray},${minGray},${minGray})`;
+    }
+    if (maxScore === minScore) {
+        const g = Math.round((minGray+maxGray)/2);
+        return `rgb(${g},${g},${g})`;
+    }
+    // Invert: higher score = lighter
+    const gray = Math.round(maxGray - (maxGray - minGray) * (maxScore - score) / (maxScore - minScore));
+    return `rgb(${gray},${gray},${gray})`;
+}
+
+// For dark mode, update backgrounds using a blue-gray scale and same logic
+function getNodeGrayDark(d, minGray = 40, maxGray = 120) {
+    // minGray: darkest, maxGray: lightest (0-255)
+    let minScore = Infinity, maxScore = -Infinity;
+    const metric = getSelectedMetric();
+    if (Array.isArray(allNodeData) && allNodeData.length > 0) {
+        allNodeData.forEach(n => {
+            if (n.metrics && typeof n.metrics[metric] === "number") {
+                if (n.metrics[metric] < minScore) minScore = n.metrics[metric];
+                if (n.metrics[metric] > maxScore) maxScore = n.metrics[metric];
+            }
+        });
+        if (minScore === Infinity) minScore = 0;
+        if (maxScore === -Infinity) maxScore = 1;
+    } else {
+        minScore = 0;
+        maxScore = 1;
+    }
+    let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
+    // If no score, use the darkest color (worst)
+    if (score === null || isNaN(score)) {
+        return `rgb(${minGray},${minGray+10},${minGray+20})`;
+    }
+    if (maxScore === minScore) {
+        const g = Math.round((minGray+maxGray)/2);
+        return `rgb(${g},${g+10},${g+20})`;
+    }
+    // Invert: higher score = lighter
+    const gray = Math.round(maxGray - (maxGray - minGray) * (maxScore - score) / (maxScore - minScore));
+    return `rgb(${gray},${gray+10},${gray+20})`;
+}
+
+// Update node list row backgrounds for current theme/metric/highlight
+function updateListRowBackgroundsForTheme() {
+    const container = document.getElementById('node-list-container');
+    if (!container) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const metric = getSelectedMetric();
+    const highlightFilter = document.getElementById('highlight-select').value;
+    const highlightNodes = getHighlightNodes(allNodeData, highlightFilter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+    Array.from(container.children).forEach(div => {
+        // Find node by ID in the first child div
+        const idDiv = div.querySelector('div');
+        if (!idDiv) return;
+        const nodeId = idDiv.textContent.replace('ID:', '').trim();
+        const node = allNodeData.find(n => n.id == nodeId);
+        if (node) {
+            // Use inline style with !important to override CSS background
+            div.style.setProperty('background', isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230), 'important');
+            div.classList.toggle('highlighted', highlightIds.has(nodeId));
+        }
+    });
+}
+
+// Patch renderNodeList to use row-by-row table style and gray background, and update bg on metric change
 function renderNodeList(nodes) {
     allNodeData = nodes;
     const container = document.getElementById('node-list-container');
@@ -309,6 +400,13 @@ function renderNodeList(nodes) {
         filtered = filtered.slice().sort((a, b) => (a.generation || 0) - (b.generation || 0));
     } else if (sort === 'island') {
         filtered = filtered.slice().sort((a, b) => (a.island || 0) - (b.island || 0));
+    } else if (sort === 'score') {
+        const metric = getSelectedMetric();
+        filtered = filtered.slice().sort((a, b) => {
+            const aScore = a.metrics && typeof a.metrics[metric] === 'number' ? a.metrics[metric] : -Infinity;
+            const bScore = b.metrics && typeof b.metrics[metric] === 'number' ? b.metrics[metric] : -Infinity;
+            return bScore - aScore; // Descending
+        });
     }
     // Highlight logic for list view
     const metric = getSelectedMetric();
@@ -317,21 +415,27 @@ function renderNodeList(nodes) {
     const highlightIds = new Set(highlightNodes.map(n => n.id));
     container.innerHTML = '';
     filtered.forEach(node => {
-        const div = document.createElement('div');
-        div.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
-        div.innerHTML =
-            `<b>ID:</b> ${node.id}<br>` +
-            `<b>Gen:</b> ${node.generation ?? ''} &nbsp; <b>Island:</b> ${node.island ?? ''}<br>` +
-            `<b>Parent:</b> ${node.parent_id ?? 'None'}<br>` +
-            `<b>Metrics:</b> ${Object.entries(node.metrics || {}).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
-        div.onclick = () => {
+        const row = document.createElement('div');
+        row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        // Use inline style with !important to override CSS background
+        row.style.setProperty('background', isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230), 'important');
+        // Table-style columns (ID, Gen, Island, Parent, Metrics)
+        row.innerHTML = `
+            <div><b>ID:</b> ${node.id}</div>
+            <div><b>Gen:</b> ${node.generation ?? ''}</div>
+            <div><b>Island:</b> ${node.island ?? ''}</div>
+            <div><b>Parent:</b> ${node.parent_id ?? 'None'}</div>
+            <div><b>Metrics:</b> ${Object.entries(node.metrics || {}).map(([k, v]) => `${k}: ${v}`).join(', ')}</div>
+        `;
+        row.onclick = () => {
             selectedProgramId = node.id;
             window._lastSelectedNodeData = node;
             renderNodeList(allNodeData);
             showSidebarContent(node);
             selectProgram(selectedProgramId);
         };
-        container.appendChild(div);
+        container.appendChild(row);
     });
 }
 
@@ -341,6 +445,11 @@ if (document.getElementById('list-search')) {
 }
 if (document.getElementById('list-sort')) {
     document.getElementById('list-sort').addEventListener('change', () => renderNodeList(allNodeData));
+}
+
+// On page load, set default sort to generation
+if (document.getElementById('list-sort')) {
+    document.getElementById('list-sort').value = 'generation';
 }
 
 // Patch fetchAndRender to update node list
@@ -397,7 +506,6 @@ window.addEventListener('resize', resize);
 function getHighlightNodes(nodes, filter, metric) {
     if (!filter) return [];
     if (filter === 'top') {
-        // Top score for selected metric
         let best = -Infinity;
         nodes.forEach(n => {
             if (n.metrics && typeof n.metrics[metric] === 'number') {
@@ -406,7 +514,7 @@ function getHighlightNodes(nodes, filter, metric) {
         });
         return nodes.filter(n => n.metrics && n.metrics[metric] === best);
     } else if (filter === 'first') {
-        return nodes.filter(n => n.generation === 1);
+        return nodes.filter(n => n.generation === 0);
     } else if (filter === 'failed') {
         return nodes.filter(n => n.metrics && n.metrics.error != null);
     } else if (filter === 'unset') {
@@ -463,7 +571,7 @@ const metricSelect = document.getElementById('metric-select');
 metricSelect.addEventListener('change', function() {
     const metric = getSelectedMetric();
     const filter = highlightSelect.value;
-    // Update highlight classes
+    // Update highlight classes and radii
     const highlightNodes = getHighlightNodes(allNodeData, filter, metric);
     const highlightIds = new Set(highlightNodes.map(n => n.id));
     g.selectAll('circle').each(function(d) {
@@ -471,14 +579,77 @@ metricSelect.addEventListener('change', function() {
             .classed('node-highlighted', highlightIds.has(d.id))
             .attr('r', getNodeRadius(d));
     });
-    // Update list view
+    // Update list view backgrounds and highlights
     const container = document.getElementById('node-list-container');
     if (container) {
-        Array.from(container.children).forEach(div => {
-            const nodeId = div.innerHTML.match(/<b>ID:<\/b>\s*([^<]+)/);
-            if (nodeId && nodeId[1]) {
-                div.classList.toggle('highlighted', highlightIds.has(nodeId[1]));
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        Array.from(container.children).forEach((div, i) => {
+            // Find node by ID in the first child div
+            const idDiv = div.querySelector('div');
+            if (!idDiv) return;
+            const nodeId = idDiv.textContent.replace('ID:', '').trim();
+            const node = allNodeData.find(n => n.id == nodeId);
+            if (node) {
+                div.style.setProperty('background', isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230), 'important');
+                div.classList.toggle('highlighted', highlightIds.has(nodeId));
             }
         });
     }
 });
+
+// Always show sidebar in list view, and adjust node-list width
+const viewList = document.getElementById('view-list');
+const sidebarEl = document.getElementById('sidebar');
+function updateListSidebarLayout() {
+    if (viewList.style.display !== 'none') {
+        sidebarEl.style.transform = 'translateX(0)';
+        viewList.style.marginRight = sidebarEl.offsetWidth + 'px';
+    } else {
+        viewList.style.marginRight = '0';
+    }
+}
+// Call on tab switch and window resize
+['resize', 'DOMContentLoaded'].forEach(evt => window.addEventListener(evt, updateListSidebarLayout));
+document.getElementById('tab-list').addEventListener('click', updateListSidebarLayout);
+document.getElementById('tab-branching').addEventListener('click', function() {
+    // Hide sidebar if it was hidden in branching
+    if (sidebarEl.style.transform === 'translateX(100%)') {
+        sidebarEl.style.transform = 'translateX(100%)';
+    }
+    viewList.style.marginRight = '0';
+});
+
+// Always show sidebar in list view
+(function() {
+    const origShowSidebar = showSidebar;
+    showSidebar = function() {
+        if (viewList.style.display !== 'none') {
+            sidebarEl.style.transform = 'translateX(0)';
+            viewList.style.marginRight = sidebarEl.offsetWidth + 'px';
+        } else {
+            origShowSidebar();
+        }
+    };
+})();
+
+// Update all node list row backgrounds for the current theme and metric
+function updateListRowBackgroundsForTheme() {
+    const container = document.getElementById('node-list-container');
+    if (!container) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const metric = getSelectedMetric();
+    const highlightFilter = document.getElementById('highlight-select').value;
+    const highlightNodes = getHighlightNodes(allNodeData, highlightFilter, metric);
+    const highlightIds = new Set(highlightNodes.map(n => n.id));
+    Array.from(container.children).forEach(div => {
+        // Find node by ID in the first child div
+        const idDiv = div.querySelector('div');
+        if (!idDiv) return;
+        const nodeId = idDiv.textContent.replace('ID:', '').trim();
+        const node = allNodeData.find(n => n.id == nodeId);
+        if (node) {
+            div.style.background = isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230);
+            div.classList.toggle('highlighted', highlightIds.has(nodeId));
+        }
+    });
+}

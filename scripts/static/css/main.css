@@ -63,6 +63,12 @@ h1 span { font-size: 0.5em; color: #666; }
     right: 0;
     height: 3.5em;
     box-sizing: border-box;
+    /* Restore blue shadow in dark mode */
+}
+[data-theme="dark"] #toolbar {
+    background: #1a222c;
+    border-bottom: 1.5px solid #22334a;
+    box-shadow: 0 2px 12px 0 #00b4d8cc;
 }
 #toolbar > label.toolbar-label {
     margin-left: 2em;
@@ -72,6 +78,10 @@ h1 span { font-size: 0.5em; color: #666; }
     font-size: 1em;
     color: var(--toolbar-label, #333);
     white-space: nowrap;
+    transition: color 0.2s;
+}
+[data-theme="dark"] #toolbar > label.toolbar-label {
+    color: #e0e6ef;
 }
 #toolbar > select {
     font-size: 1em;
@@ -284,7 +294,6 @@ a:hover {
     }
 }
 
-/* Modern toggle switch for dark mode */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -337,56 +346,94 @@ a:hover {
 /* Node list styles */
 #node-list-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1em;
+    flex-direction: column;
+    gap: 0.5em;
+    width: 100%;
 }
 .node-list-item {
-    background: var(--sidebar-bg);
-    color: var(--text-color);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    border-radius: 7px;
     border: 1.5px solid #e0e0e0;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px #0001;
-    padding: 1em 1.5em;
-    min-width: 220px;
-    max-width: 340px;
-    flex: 1 1 260px;
-    cursor: pointer;
-    transition: border 0.2s, box-shadow 0.2s;
-    position: relative;
+    box-shadow: none;
+    padding: 0.7em 1.2em 0.7em 1.2em;
+    margin: 0;
     font-size: 1em;
-}
-.node-list-item.selected {
-    border: 2.5px solid #3b5ca8;
-    box-shadow: 0 4px 16px #3b5ca888;
-    z-index: 2;
-}
-.node-list-item:hover {
-    border: 2px solid #FFD600;
-    box-shadow: 0 4px 16px #FFD60044;
-    z-index: 2;
-}
-.node-list-item.highlighted {
-    border: 2.5px solid #2196f3;
-    box-shadow: 0 0 12px #2196f388;
-    z-index: 3;
+    min-height: 2.5em;
+    transition: background 0.2s, border 0.2s;
+    gap: 2em;
+    white-space: normal;
+    word-break: break-word;
+    color: #222 !important;
+    /* Remove background property to allow JS inline style to take effect */
+    /* background: var(--list-row-bg, #f7f7f7); */
 }
 [data-theme="dark"] .node-list-item {
-    border: 1.5px solid #3b5ca8;
-    background: #23272a;
-    color: #e6eaf3;
+    border-color: #2a3a4a;
+    color: #222 !important;
+    /* Remove background property to allow JS inline style to take effect */
+    /* background: var(--list-row-bg, #f7f7f7) !important; */
+}
+.node-list-item.selected {
+    border: 2.5px solid #2196f3;
+    z-index: 3;
+    box-shadow: 0 0 0 2px #fff;
 }
 [data-theme="dark"] .node-list-item.selected {
-    border: 2.5px solid #6ea8ff;
-    box-shadow: 0 4px 16px #6ea8ff88;
+    border: 2.5px solid #00b4d8;
+    box-shadow: 0 0 0 2px #232b33;
 }
-[data-theme="dark"] .node-list-item:hover {
-    border: 2px solid #FFD600;
-    box-shadow: 0 4px 16px #FFD60044;
+.node-list-item.highlighted {
+    box-shadow: 0 0 0 3px #ffb703, 0 0 12px #ffb70344;
+    border-color: #ffb703;
+    z-index: 4;
 }
 [data-theme="dark"] .node-list-item.highlighted {
-    border: 2.5px solid #00b4d8;
-    box-shadow: 0 0 16px #00b4d888;
-    background: #1e2633;
+    box-shadow: 0 0 0 3px #ffd166, 0 0 16px #ffd16688;
+    border-color: #ffd166;
+}
+.node-list-item.selected.highlighted {
+    border: 2.5px solid #ffb703;
+    box-shadow: 0 0 0 3px #ffb703, 0 0 12px #ffb70344;
+}
+[data-theme="dark"] .node-list-item.selected.highlighted {
+    border: 2.5px solid #ffd166;
+    box-shadow: 0 0 0 3px #ffd166, 0 0 16px #ffd16688;
+}
+
+/* List view: multiline table cell style */
+.node-list-item > div {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-right: 1.5em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+}
+
+/* Increase top padding in list view for search box */
+#view-list {
+    display: block;
+    padding-top: 4.5em !important;
+}
+#view-list > div:first-child {
+    margin-bottom: 1em;
+}
+
+/* Table header style for list view (optional, if you add headers) */
+.node-list-header {
+    display: flex;
+    flex-direction: row;
+    font-weight: bold;
+    color: #888;
+    padding: 0.2em 1.2em 0.2em 1.2em;
+    border-bottom: 1.5px solid #e0e0e0;
+    margin-bottom: 0.2em;
+}
+[data-theme="dark"] .node-list-header {
+    color: #b0b8c0;
+    border-color: #2a3a4a;
 }
 
 #list-search {
