@@ -4,9 +4,9 @@ import glob
 import logging
 from flask import Flask, render_template, render_template_string, jsonify
 
-app = Flask(__name__, template_folder="templates")
 
 logger = logging.getLogger("openevolve.visualizer")
+app = Flask(__name__, template_folder="templates")
 
 
 def find_latest_checkpoint(base_folder):
@@ -59,10 +59,7 @@ def load_evolution_data(checkpoint_folder):
 
 @app.route("/")
 def index():
-    return render_template(
-        "index.html",
-        checkpoint_dir=checkpoint_dir
-    )
+    return render_template("index.html", checkpoint_dir=checkpoint_dir)
 
 
 checkpoint_dir = None  # Global variable to store the checkpoint directory
