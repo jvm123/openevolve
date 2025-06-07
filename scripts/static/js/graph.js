@@ -113,6 +113,17 @@ function ensureGraphSvg() {
     return { svg: svgEl, g: gEl };
 }
 
+function applyDragHandlersToAllNodes() {
+    if (!g) return;
+    g.selectAll('circle').each(function() {
+        d3.select(this).on('.drag', null);
+        d3.select(this).call(d3.drag()
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended));
+    });
+}
+
 function renderGraph(data) {
     const { svg: svgEl, g: gEl } = ensureGraphSvg();
     svg = svgEl;
@@ -153,7 +164,6 @@ function renderGraph(data) {
         .on("click", function(event, d) {
             setSelectedProgramId(d.id);
             setSidebarSticky(true);
-            // Remove all node-hovered and node-selected classes
             g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                 .attr('stroke', function(nd) {
                     return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
@@ -166,6 +176,7 @@ function renderGraph(data) {
             showSidebar();
             selectProgram(selectedProgramId);
             event.stopPropagation();
+            applyDragHandlersToAllNodes();
         })
         .on("dblclick", openInNewTab)
         .on("mouseover", function(event, d) {
@@ -176,21 +187,18 @@ function renderGraph(data) {
             d3.select(this)
                 .classed('node-hovered', true)
                 .attr('stroke', '#FFD600').attr('stroke-width', 4);
+            applyDragHandlersToAllNodes();
         })
         .on("mouseout", function(event, d) {
             d3.select(this)
                 .classed('node-hovered', false)
                 .attr('stroke', selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
                 .attr('stroke-width', selectedProgramId === d.id ? 3 : 1.5);
-            // Hide sidebar if no node is selected
             if (!selectedProgramId) {
                 hideSidebar();
             }
-        })
-        .call(d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
+            applyDragHandlersToAllNodes();
+        });
 
     node.append("title").text(d => d.id);
 
@@ -206,8 +214,8 @@ function renderGraph(data) {
     });
 
     selectProgram(selectedProgramId);
+    applyDragHandlersToAllNodes();
 
-    // Click background to unselect node and hide sidebar
     svg.on("click", function(event) {
         if (event.target === svg.node()) {
             setSelectedProgramId(null);
@@ -218,6 +226,7 @@ function renderGraph(data) {
                 .classed("node-hovered", false)
                 .attr("stroke", function(d) { return (highlightIds.has(d.id) ? '#2196f3' : '#333'); })
                 .attr("stroke-width", 1.5);
+            applyDragHandlersToAllNodes();
         }
     });
 }
@@ -235,12 +244,8 @@ export function animateGraphNodeAttributes() {
         .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
         .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
         .attr('opacity', 1)
-        .selection()
-        .each(function(d) {
-            d3.select(this)
-                .classed('node-highlighted', highlightIds.has(d.id))
-                .classed('node-selected', selectedProgramId === d.id);
-        });
+        .on('end', null);
+    setTimeout(applyDragHandlersToAllNodes, 420);
 }
 
 function dragstarted(event, d) {
