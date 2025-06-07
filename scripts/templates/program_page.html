@@ -16,14 +16,20 @@
         <li><strong>Generation:</strong> {{ program_data.generation }}</li>
         <li><strong>Parent ID:</strong> {{ program_data.parent_id or 'None' }}</li>
         <li><strong>Metrics:</strong>
-    <ul>
-        {% for key, value in program_data.metrics.items() %}
-            <li><strong>{{ key }}:</strong> {{ value }}</li>
-        {% endfor %}
-    </ul>
+            <ul>
+                {% for key, value in program_data.metrics.items() %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
         </li>
         </ul>
     <h2>Code:</h2>
     <pre>{{ program_data.code }}</pre>
+    <h2>Prompts:</h2>
+    <ul>
+        {% for key, value in program_data.prompts.items() %}
+            <li><strong>{{ key }}:</strong> <pre style="white-space: pre-wrap; word-break: break-word;">{{ value }}</pre></li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

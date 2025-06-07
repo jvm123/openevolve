@@ -27,8 +27,8 @@ if (!document.getElementById('custom-dark-toggle')) {
     });
 }
 
-// Tab switching logic (add List tab)
-const tabs = ["branching", "list", "performance", "prompts"];
+// Tab switching logic
+const tabs = ["branching", "performance", "list"];
 tabs.forEach(tab => {
     document.getElementById(`tab-${tab}`).addEventListener('click', function() {
         tabs.forEach(t => {
@@ -103,21 +103,79 @@ function formatMetrics(metrics) {
 }
 
 function showSidebarContent(d) {
+    const sidebarContent = document.getElementById('sidebar-content');
     if (!d) {
-        document.getElementById('sidebar-content').innerHTML =
+        sidebarContent.innerHTML =
             '<span style="color:#888;">Select a node to see details.</span>';
         hideSidebar();
         return;
     }
-    document.getElementById('sidebar-content').innerHTML =
-        '<a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;margin-left:0.5em;">[open in new window]</a><br><br>' +
-        '<b>Program ID:</b> ' + d.id + '<br>' +
-        '<b>Island:</b> ' + d.island + '<br>' +
-        '<b>Generation:</b> ' + d.generation + '<br>' +
-        '<b>Parent ID:</b> ' + (d.parent_id || 'None') + '<br><br>' +
-        '<b>Metrics:</b><br>' + formatMetrics(d.metrics) + '<br><br>' +
-        '<b>Code:</b> <pre>' + d.code.replace(/</g, '&lt;') + '</pre>';
-    showSidebar();
+    // X button for closing sidebar (tight in the corner)
+    let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:4px;right:4px;font-size:1.3em;background:none;border:none;color:#888;cursor:pointer;z-index:10;">&times;</button>';
+    // Open in new window link (no extra left margin)
+    let openLink = '<a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a>';
+    // Tab logic for code/prompts
+    let tabHtml = '';
+    let tabContentHtml = '';
+    let tabNames = [];
+    if (d.code && typeof d.code === 'string' && d.code.trim() !== '') tabNames.push('Code');
+    if (d.prompts && typeof d.prompts === 'object' && Object.keys(d.prompts).length > 0) tabNames.push('Prompt');
+    if (tabNames.length > 0) {
+        tabHtml += '<div id="sidebar-tab-bar" style="display:flex;gap:1em;margin:1em 0 0.5em 0;">';
+        tabNames.forEach((tab, i) => {
+            tabHtml += `<div class="sidebar-tab${i===0?' active':''}" data-tab="${tab}" style="cursor:pointer;padding:0.2em 1.2em;border-radius:6px 6px 0 0;background:#eee;font-weight:500;">${tab}</div>`;
+        });
+        tabHtml += '</div>';
+        tabContentHtml += '<div id="sidebar-tab-content">';
+        if (tabNames[0] === 'Code') {
+            tabContentHtml += `<pre>${d.code.replace(/</g, '&lt;')}</pre>`;
+        } else if (tabNames[0] === 'Prompt') {
+            Object.entries(d.prompts).forEach(([k, v]) => {
+                tabContentHtml += `<b>Prompt: ${k}</b><pre>${v.replace(/</g, '&lt;')}</pre>`;
+            });
+        }
+        tabContentHtml += '</div>';
+    }
+    // Sidebar HTML
+    sidebarContent.innerHTML =
+        `<div style="position:relative;">
+            ${closeBtn}
+            ${openLink}<br><br>
+            <b>Program ID:</b> ${d.id}<br>
+            <b>Island:</b> ${d.island}<br>
+            <b>Generation:</b> ${d.generation}<br>
+            <b>Parent ID:</b> ${d.parent_id || 'None'}<br><br>
+            <b>Metrics:</b><br>${formatMetrics(d.metrics)}<br><br>
+            ${tabHtml}${tabContentHtml}
+        </div>`;
+    // Tab switching logic
+    if (tabNames.length > 1) {
+        const tabBar = document.getElementById('sidebar-tab-bar');
+        const tabContent = document.getElementById('sidebar-tab-content');
+        Array.from(tabBar.children).forEach(tabEl => {
+            tabEl.onclick = function() {
+                Array.from(tabBar.children).forEach(t => t.classList.remove('active'));
+                tabEl.classList.add('active');
+                if (tabEl.dataset.tab === 'Code') {
+                    tabContent.innerHTML = `<pre>${d.code.replace(/</g, '&lt;')}</pre>`;
+                } else if (tabEl.dataset.tab === 'Prompt') {
+                    let html = '';
+                    Object.entries(d.prompts).forEach(([k, v]) => {
+                        html += `<b>Prompt: ${k}</b><pre>${v.replace(/</g, '&lt;')}</pre>`;
+                    });
+                    tabContent.innerHTML = html;
+                }
+            };
+        });
+    }
+    // X button logic: also clear selection
+    const closeBtnEl = document.getElementById('sidebar-close-btn');
+    if (closeBtnEl) closeBtnEl.onclick = function() {
+        selectedProgramId = null;
+        showSidebarContent(null);
+        // Also update graph view selection
+        g.selectAll('circle').classed('node-selected', false);
+    };
 }
 
 function openInNewTab(event, d) {
