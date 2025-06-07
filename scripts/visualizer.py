@@ -90,25 +90,32 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>OpenEvolve Evolution Visualizer<br /><span>Checkpoint: None</span></h1>
-    <div id="toolbar">
-        <div class="tabs">
+    <div id="toolbar" style="position:fixed;top:0;left:0;width:100vw;z-index:100;background:#fff;box-shadow:0 2px 8px #eee;display:flex;align-items:center;gap:1.5em;padding:0.3em 1em 0.3em 1em;">
+        <div style="display:flex;flex-direction:column;min-width:220px;">
+            <span style="font-size:1.1em;font-weight:bold;">OpenEvolve Evolution Visualizer</span>
+            <span id="checkpoint-label" style="font-size:0.9em;color:#666;">Checkpoint: None</span>
+        </div>
+        <div class="tabs" style="margin-left:1.5em;">
             <div class="tab active" id="tab-branching">Branching</div>
             <div class="tab" id="tab-performance">Performance</div>
             <div class="tab" id="tab-prompts">Prompts</div>
         </div>
-        <label class="toolbar-label" for="highlight-select">Highlight:</label>
-        <select id="highlight-select">
+        <label class="toolbar-label" for="highlight-select" style="margin-left:2em;">Highlight:</label>
+        <select id="highlight-select" style="font-size:1em;margin-left:0.5em;">
             <option value="best" selected>Best</option>
             <option value="first">First</option>
             <option value="failed">Failed</option>
         </select>
+        <label class="toolbar-label" for="metric-select" style="margin-left:2em;">Metric:</label>
+        <select id="metric-select" style="font-size:1em;margin-left:0.5em;">
+            <option value="combined_score" selected>combined_score</option>
+        </select>
     </div>
-    <div id="view-branching" class="active">
+    <div id="view-branching" class="active" style="padding-top:3.5em;">
         <div id="graph"></div>
     </div>
-    <div id="view-performance"></div>
-    <div id="view-prompts"></div>
+    <div id="view-performance" style="padding-top:3.5em;"></div>
+    <div id="view-prompts" style="padding-top:3.5em;"></div>
     <script>
     // Tab switching logic
     const tabs = ["branching", "performance", "prompts"];
@@ -124,7 +131,8 @@ HTML_TEMPLATE = """
     });
 
     let width = window.innerWidth;
-    let height = window.innerHeight - document.querySelector('h1').offsetHeight;
+    let toolbarHeight = document.getElementById('toolbar').offsetHeight;
+    let height = window.innerHeight - toolbarHeight;
 
     const svg = d3.select("#graph").append("svg")
         .attr("width", width)
@@ -144,12 +152,14 @@ HTML_TEMPLATE = """
 
     let lastDataStr = null;
     let sticky = false;
+    let selectedProgramId = null;
 
     function formatMetrics(metrics) {
         return Object.entries(metrics).map(([k, v]) => `<b>${k}</b>: ${v}`).join('<br>');
     }
 
     function showTooltip(event, d) {
+        if (sticky) return;
         resetTooltip(false);
         tooltip.transition().duration(200).style("opacity", .95);
         tooltip.html(
@@ -170,13 +180,16 @@ HTML_TEMPLATE = """
             .attr("stroke-width", 3);
     }
     function showTooltipSticky(event, d) {
+        sticky = false;
         showTooltip(event, d);
         sticky = true;
+        selectedProgramId = d.id;
     }
 
     function hideTooltip(event, d) {
         if (sticky) return;
         tooltip.transition().duration(300).style("opacity", 0);
+        selectedProgramId = null;
 
         d3.selectAll("circle")
             .transition()
@@ -184,7 +197,7 @@ HTML_TEMPLATE = """
             .attr("stroke", "#fff")
             .attr("stroke-width", 1.5);
     }
-    function resetTooltip(event, d) {
+    function resetTooltip(event = false, d = null) {
         // Only reset if the click target is the SVG itself (not a node)
         if (!event || event.target === this) {
             sticky = false;
@@ -202,17 +215,55 @@ HTML_TEMPLATE = """
         return d.island !== undefined ? d3.schemeCategory10[d.island % 10] : "#888";
     }
 
+    // Use the selected metric from the select box
+    function getSelectedMetric() {
+        const metricSelect = document.getElementById('metric-select');
+        return metricSelect ? metricSelect.value : 'overall_score';
+    }
+
     function getNodeSuccess(d) {
-        return d.metrics && typeof d.metrics.overall_score === "number" && !d.metrics.error;
+        const metric = getSelectedMetric();
+        return d.metrics && typeof d.metrics[metric] === "number" && !d.metrics.error;
     }
 
     function getNodeRadius(d) {
         let minScore = 0, maxScore = 1;
         let minR = 10, maxR = 32;
-        let score = d.metrics && typeof d.metrics.overall_score === "number" ? d.metrics.overall_score : null;
+        const metric = getSelectedMetric();
+        let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
         if (score === null) return minR;
         score = Math.max(minScore, Math.min(maxScore, score));
         return minR + (maxR - minR) * (score - minScore) / (maxScore - minScore);
+    }
+
+    function selectProgram(programId) {
+        if (!programId) return;
+        const nodes = g.selectAll("circle");
+        nodes.each(function(d) {
+            if (d.id === programId) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("stroke", "#000")
+                    .attr("stroke-width", 3);
+            } else {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 1.5);
+            }
+        });
+        // Scroll to the selected program
+        const selectedNode = nodes.filter(d => d.id === programId);
+        if (selectedNode.empty()) return;
+        const bbox = selectedNode.node().getBoundingClientRect();
+        const svgRect = svg.node().getBoundingClientRect();
+        const scrollX = bbox.left - svgRect.left + bbox.width / 2 - width / 2;
+        const scrollY = bbox.top - svgRect.top + bbox.height / 2 - height / 2;
+        svg.transition()
+            .duration(500)
+            .call(d3.zoom().transform, d3.zoomIdentity.translate(-scrollX, -scrollY).scale(1));
     }
 
     function renderGraph(data) {
@@ -274,6 +325,8 @@ HTML_TEMPLATE = """
             d.fx = null;
             d.fy = null;
         }
+
+        selectProgram(selectedProgramId);
     }
 
     // Add background click handler to reset tooltip
@@ -284,14 +337,35 @@ HTML_TEMPLATE = """
             .then(resp => resp.json())
             .then(data => {
                 const dataStr = JSON.stringify(data);
-                if (dataStr !== lastDataStr) {
-                    renderGraph(data);
-                    lastDataStr = dataStr;
+                if (dataStr === lastDataStr) {
+                    return;
                 }
+                lastDataStr = dataStr;
 
-                // set headline to include data.checkpoint_dir
-                let title = "OpenEvolve Evolution Visualizer <br /><span>Checkpoint: " + data.checkpoint_dir + "</span>";
-                document.querySelector('h1').innerHTML = title;
+                renderGraph(data);
+
+                // set checkpoint label in toolbar
+                document.getElementById('checkpoint-label').textContent = "Checkpoint: " + data.checkpoint_dir;
+
+                // update metric-select options. keep the selected option.
+                const metricSelect = document.getElementById('metric-select');
+                const currentValue = metricSelect.value;
+                metricSelect.innerHTML = '';
+                const metrics = new Set();
+                data.nodes.forEach(node => {
+                    if (node.metrics) {
+                        Object.keys(node.metrics).forEach(metric => metrics.add(metric));
+                    }
+                });
+                metrics.forEach(metric => {
+                    const option = document.createElement('option');
+                    option.value = metric;
+                    option.textContent = metric;
+                    metricSelect.appendChild(option);
+                });
+                if (metricSelect.options.length > 0) {
+                    metricSelect.selectedIndex = 0;
+                }
             });
     }
     fetchAndRender();
@@ -300,11 +374,21 @@ HTML_TEMPLATE = """
     // Responsive resize
     function resize() {
         width = window.innerWidth;
-        height = window.innerHeight - document.querySelector('h1').offsetHeight;
+        const toolbarHeight = document.getElementById('toolbar').offsetHeight;
+        height = window.innerHeight - toolbarHeight;
         svg.attr("width", width).attr("height", height);
         fetchAndRender();
     }
     window.addEventListener('resize', resize);
+
+    // Re-render graph when metric-select changes
+    document.getElementById('metric-select').addEventListener('change', function() {
+        fetch('/api/data')
+            .then(resp => resp.json())
+            .then(data => {
+                renderGraph(data);
+            });
+    });
     </script>
 </body>
 </html>
