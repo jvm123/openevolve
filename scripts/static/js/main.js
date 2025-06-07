@@ -3,6 +3,9 @@
 // Declare allNodeData at the very top to avoid ReferenceError
 let allNodeData = [];
 
+// --- Store archive list globally for highlight logic ---
+let archiveProgramIds = [];
+
 const darkToggleContainer = document.getElementById('darkmode-toggle').parentElement;
 const darkToggleInput = document.getElementById('darkmode-toggle');
 const darkToggleLabel = document.getElementById('darkmode-label');
@@ -102,6 +105,36 @@ function formatMetrics(metrics) {
     return Object.entries(metrics).map(([k, v]) => `<b>${k}</b>: ${v}`).join('<br>');
 }
 
+// --- Utility: scroll and select node by id in any view ---
+function scrollAndSelectNodeById(nodeId) {
+    // Try list view first
+    const container = document.getElementById('node-list-container');
+    if (container) {
+        const rows = Array.from(container.children);
+        const target = rows.find(div => div.getAttribute('data-node-id') === nodeId);
+        if (target) {
+            target.scrollIntoView({behavior: 'smooth', block: 'center'});
+            selectedProgramId = nodeId;
+            renderNodeList(allNodeData);
+            showSidebarContent(allNodeData.find(n => n.id == nodeId));
+            showSidebar();
+            selectProgram(selectedProgramId);
+            return true;
+        }
+    }
+    // Try graph views (branching/performance)
+    const node = allNodeData.find(n => n.id == nodeId);
+    if (node) {
+        selectedProgramId = nodeId;
+        showSidebarContent(node);
+        showSidebar();
+        selectProgram(selectedProgramId);
+        // Optionally, center/zoom to node in D3 (not implemented here)
+        return true;
+    }
+    return false;
+}
+
 function showSidebarContent(d) {
     const sidebarContent = document.getElementById('sidebar-content');
     if (!d) {
@@ -110,10 +143,15 @@ function showSidebarContent(d) {
         hideSidebar();
         return;
     }
-    // X button for closing sidebar (tight in the corner)
-    let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:4px;right:4px;font-size:1.3em;background:none;border:none;color:#888;cursor:pointer;z-index:10;">&times;</button>';
-    // Open in new window link (no extra left margin)
-    let openLink = '<a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a>';
+    // Star for MAP-Elite archive
+    let starHtml = '';
+    if (archiveProgramIds && archiveProgramIds.includes(d.id)) {
+        starHtml = '<span title="MAP-Elite archive" alt="MAP-Elite archive" style="position:absolute;top:0.4em;left:0.5em;font-size:1.7em;color:#FFD600;z-index:20;">★</span>';
+    }
+    // X button for closing sidebar (tighter in the corner)
+    let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:0.2em;right:0.5em;font-size:1.5em;background:none;border:none;color:#888;cursor:pointer;z-index:10;line-height:1;">&times;</button>';
+    // Centered open link
+    let openLink = '<div style="text-align:center;margin:0.5em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a></div>';
     // Tab logic for code/prompts
     let tabHtml = '';
     let tabContentHtml = '';
@@ -121,30 +159,39 @@ function showSidebarContent(d) {
     if (d.code && typeof d.code === 'string' && d.code.trim() !== '') tabNames.push('Code');
     if (d.prompts && typeof d.prompts === 'object' && Object.keys(d.prompts).length > 0) tabNames.push('Prompt');
     if (tabNames.length > 0) {
-        tabHtml += '<div id="sidebar-tab-bar" style="display:flex;gap:1em;margin:1em 0 0.5em 0;">';
+        tabHtml += '<div id="sidebar-tab-bar" class="sidebar-tab-bar">';
         tabNames.forEach((tab, i) => {
-            tabHtml += `<div class="sidebar-tab${i===0?' active':''}" data-tab="${tab}" style="cursor:pointer;padding:0.2em 1.2em;border-radius:6px 6px 0 0;background:#eee;font-weight:500;">${tab}</div>`;
+            tabHtml += `<div class="sidebar-tab${i===0?' active':''}" data-tab="${tab}">${tab}</div>`;
         });
         tabHtml += '</div>';
         tabContentHtml += '<div id="sidebar-tab-content">';
         if (tabNames[0] === 'Code') {
-            tabContentHtml += `<pre>${d.code.replace(/</g, '&lt;')}</pre>`;
+            tabContentHtml += `<pre class="sidebar-pre">${d.code.replace(/</g, '&lt;')}</pre>`;
         } else if (tabNames[0] === 'Prompt') {
             Object.entries(d.prompts).forEach(([k, v]) => {
-                tabContentHtml += `<b>Prompt: ${k}</b><pre>${v.replace(/</g, '&lt;')}</pre>`;
+                tabContentHtml += `<b>Prompt: ${k}</b><pre class="sidebar-pre">${v.replace(/</g, '&lt;')}</pre>`;
             });
         }
         tabContentHtml += '</div>';
     }
+    // Parent island logic
+    let parentIslandHtml = '';
+    if (d.parent_id && d.parent_id !== 'None') {
+        const parentNode = allNodeData.find(n => n.id == d.parent_id);
+        if (parentNode && parentNode.island !== undefined && parentNode.island !== d.island) {
+            parentIslandHtml = `<br><b>Parent Island:</b> ${parentNode.island}`;
+        }
+    }
     // Sidebar HTML
     sidebarContent.innerHTML =
-        `<div style="position:relative;">
+        `<div style="position:relative;min-height:2em;">
+            ${starHtml}
             ${closeBtn}
-            ${openLink}<br><br>
+            ${openLink}
             <b>Program ID:</b> ${d.id}<br>
             <b>Island:</b> ${d.island}<br>
             <b>Generation:</b> ${d.generation}<br>
-            <b>Parent ID:</b> ${d.parent_id || 'None'}<br><br>
+            <b>Parent ID:</b> <a href="#" class="parent-link" data-parent="${d.parent_id || ''}">${d.parent_id || 'None'}</a>${parentIslandHtml}<br><br>
             <b>Metrics:</b><br>${formatMetrics(d.metrics)}<br><br>
             ${tabHtml}${tabContentHtml}
         </div>`;
@@ -157,11 +204,11 @@ function showSidebarContent(d) {
                 Array.from(tabBar.children).forEach(t => t.classList.remove('active'));
                 tabEl.classList.add('active');
                 if (tabEl.dataset.tab === 'Code') {
-                    tabContent.innerHTML = `<pre>${d.code.replace(/</g, '&lt;')}</pre>`;
+                    tabContent.innerHTML = `<pre class="sidebar-pre">${d.code.replace(/</g, '&lt;')}</pre>`;
                 } else if (tabEl.dataset.tab === 'Prompt') {
                     let html = '';
                     Object.entries(d.prompts).forEach(([k, v]) => {
-                        html += `<b>Prompt: ${k}</b><pre>${v.replace(/</g, '&lt;')}</pre>`;
+                        html += `<b>Prompt: ${k}</b><pre class="sidebar-pre">${v.replace(/</g, '&lt;')}</pre>`;
                     });
                     tabContent.innerHTML = html;
                 }
@@ -176,6 +223,22 @@ function showSidebarContent(d) {
         // Also update graph view selection
         g.selectAll('circle').classed('node-selected', false);
     };
+    // Parent link logic: works in all tabs
+    const parentLink = sidebarContent.querySelector('.parent-link');
+    if (parentLink && parentLink.dataset.parent && parentLink.dataset.parent !== 'None' && parentLink.dataset.parent !== '') {
+        parentLink.onclick = function(e) {
+            e.preventDefault();
+            scrollAndSelectNodeById(parentLink.dataset.parent);
+            // Also update node selection in all graphs (including performance tab)
+            selectProgram(parentLink.dataset.parent);
+            // If performance tab is visible, re-render to update red border
+            if (document.getElementById('view-performance').style.display !== 'none') {
+                if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+                    window.renderPerformanceGraph && window.renderPerformanceGraph(allNodeData);
+                }
+            }
+        };
+    }
 }
 
 function openInNewTab(event, d) {
@@ -441,6 +504,28 @@ function updateListRowBackgroundsForTheme() {
     });
 }
 
+// --- Shared metric bar rendering for summary and node metrics, with min/max labels (CSS only for position) ---
+function renderMetricBar(value, min, max, opts={}) {
+    let percent = 0;
+    if (typeof value === 'number' && isFinite(value) && max > min) {
+        percent = (value - min) / (max - min);
+        percent = Math.max(0, Math.min(1, percent));
+    }
+    // Min/max labels: always present, rely on CSS for position
+    let minLabel = `<span class="metric-bar-min">${min.toFixed(2)}</span>`;
+    let maxLabel = `<span class="metric-bar-max">${max.toFixed(2)}</span>`;
+    if (opts.vertical) {
+        // For fitness bar, show min/max at top right/bottom right
+        minLabel = `<span class="fitness-bar-min" style="right:0;left:auto;">${min.toFixed(2)}</span>`;
+        maxLabel = `<span class="fitness-bar-max" style="right:0;left:auto;">${max.toFixed(2)}</span>`;
+    }
+    // Ensure min/max are always visible by not hiding them with overflow
+    return `<span class="metric-bar${opts.vertical ? ' vertical' : ''}" style="overflow:visible;">
+        ${minLabel}${maxLabel}
+        <span class="metric-bar-fill" style="width:${Math.round(percent*100)}%"></span>
+    </span>`;
+}
+
 // Patch renderNodeList to use row-by-row table style and gray background, and update bg on metric change
 function renderNodeList(nodes) {
     allNodeData = nodes;
@@ -452,6 +537,8 @@ function renderNodeList(nodes) {
     if (search) {
         filtered = nodes.filter(n => (n.id + '').toLowerCase().includes(search));
     }
+    const metric = getSelectedMetric();
+    // Always re-sort if sort is by score and metric changes
     if (sort === 'id') {
         filtered = filtered.slice().sort((a, b) => (a.id + '').localeCompare(b.id + ''));
     } else if (sort === 'generation') {
@@ -459,7 +546,6 @@ function renderNodeList(nodes) {
     } else if (sort === 'island') {
         filtered = filtered.slice().sort((a, b) => (a.island || 0) - (b.island || 0));
     } else if (sort === 'score') {
-        const metric = getSelectedMetric();
         filtered = filtered.slice().sort((a, b) => {
             const aScore = a.metrics && typeof a.metrics[metric] === 'number' ? a.metrics[metric] : -Infinity;
             const bScore = b.metrics && typeof b.metrics[metric] === 'number' ? b.metrics[metric] : -Infinity;
@@ -467,34 +553,134 @@ function renderNodeList(nodes) {
         });
     }
     // Highlight logic for list view
-    const metric = getSelectedMetric();
     const highlightFilter = document.getElementById('highlight-select').value;
     const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
     const highlightIds = new Set(highlightNodes.map(n => n.id));
+    // For fitness bar scaling
+    const allScores = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && !isNaN(x));
+    const minScore = allScores.length ? Math.min(...allScores) : 0;
+    const maxScore = allScores.length ? Math.max(...allScores) : 1;
+    // Compute summary
+    const topScore = allScores.length ? Math.max(...allScores) : 0;
+    const avgScore = allScores.length ? (allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+    // Add summary bar (visually improved, with border, using shared metric bar)
+    let summaryBar = document.getElementById('list-summary-bar');
+    if (!summaryBar) {
+        summaryBar = document.createElement('div');
+        summaryBar.id = 'list-summary-bar';
+        summaryBar.className = 'list-summary-bar';
+        container.parentElement.insertBefore(summaryBar, container);
+    }
+    summaryBar.innerHTML = `
+      <div class="summary-block">
+        <span class="summary-icon">🏆</span>
+        <span class="summary-label">Top score</span>
+        <span class="summary-value">${topScore.toFixed(4)}</span>
+        ${renderMetricBar(topScore, minScore, maxScore)}
+      </div>
+      <div class="summary-block">
+        <span class="summary-icon">📊</span>
+        <span class="summary-label">Average</span>
+        <span class="summary-value">${avgScore.toFixed(4)}</span>
+        ${renderMetricBar(avgScore, minScore, maxScore)}
+      </div>
+    `;
     container.innerHTML = '';
     filtered.forEach(node => {
+        // Node row: selectable by clicking anywhere except links
         const row = document.createElement('div');
         row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        // Use inline style with !important to override CSS background
-        row.style.setProperty('background', isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230), 'important');
-        // Table-style columns (ID, Gen, Island, Parent, Metrics)
-        row.innerHTML = `
+        row.setAttribute('data-node-id', node.id); // for parent scroll
+        row.tabIndex = 0;
+        // Fitness bar calculation
+        let score = node.metrics && typeof node.metrics[metric] === 'number' ? node.metrics[metric] : null;
+        let percent = 0;
+        if (score !== null && !isNaN(score) && maxScore > minScore) {
+            percent = (score - minScore) / (maxScore - minScore);
+            percent = Math.max(0, Math.min(1, percent));
+        }
+        // Fitness bar HTML (vertical, with min/max at top right/bottom right)
+        const bar = document.createElement('div');
+        bar.className = 'fitness-bar';
+        bar.style.position = 'relative';
+        bar.style.width = '28px';
+        bar.style.height = '64px';
+        bar.style.margin = '0 20px 0 0';
+        bar.innerHTML = `
+            <span class="fitness-bar-max" style="position:absolute;top:-1.2em;right:0;font-size:0.85em;color:#bbb;">${maxScore.toFixed(2)}</span>
+            <span class="fitness-bar-min" style="position:absolute;top:100%;right:0;font-size:0.85em;color:#bbb;">${minScore.toFixed(2)}</span>
+            <div class="fitness-bar-fill" style="position:absolute;bottom:0;left:0;width:100%;background:#2196f3;border-radius:4px 4px 0 0;height:${Math.round(percent * 100)}%;transition:height 0.2s;"></div>
+        `;
+        // Main info block (ID, Gen, Island, Parent)
+        const infoBlock = document.createElement('div');
+        infoBlock.className = 'node-info-block';
+        infoBlock.style.flex = '0 0 160px';
+        infoBlock.style.display = 'flex';
+        infoBlock.style.flexDirection = 'column';
+        infoBlock.style.justifyContent = 'center';
+        infoBlock.style.gap = '2px';
+        infoBlock.style.marginRight = '18px';
+        infoBlock.innerHTML = `
             <div><b>ID:</b> ${node.id}</div>
             <div><b>Gen:</b> ${node.generation ?? ''}</div>
             <div><b>Island:</b> ${node.island ?? ''}</div>
-            <div><b>Parent:</b> ${node.parent_id ?? 'None'}</div>
-            <div><b>Metrics:</b> ${Object.entries(node.metrics || {}).map(([k, v]) => `${k}: ${v}`).join(', ')}</div>
+            <div><b>Parent:</b> <a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></div>
         `;
-        row.onclick = () => {
+        // Metrics block below, full width
+        let metricsHtml = '<div class="metrics-block" style="display:flex;flex-direction:column;gap:2px;">';
+        if (node.metrics) {
+            Object.entries(node.metrics).forEach(([k, v]) => {
+                let val = (typeof v === 'number' && isFinite(v)) ? v.toFixed(4) : v;
+                // Per-metric bar (horizontal, blue), use min/max for this metric
+                let allVals = nodes.map(n => (n.metrics && typeof n.metrics[k] === 'number') ? n.metrics[k] : null).filter(x => x !== null && isFinite(x));
+                let minV = allVals.length ? Math.min(...allVals) : 0;
+                let maxV = allVals.length ? Math.max(...allVals) : 1;
+                metricsHtml += `<div class="metric-row"><span class="metric-label">${k}:</span> <span class="metric-value">${val}</span>${renderMetricBar(v, minV, maxV)}</div>`;
+            });
+        }
+        metricsHtml += '</div>';
+        // Flexbox layout: fitness bar | info block | metrics block
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '0';
+        row.style.padding = '12px 8px';
+        row.style.margin = '0 0 10px 0';
+        row.style.borderRadius = '8px';
+        row.style.border = selectedProgramId === node.id ? '2.5px solid red' : '1.5px solid #4442';
+        row.style.boxShadow = highlightIds.has(node.id) ? '0 0 0 2px #2196f3' : 'none';
+        row.style.background = '';
+        row.appendChild(bar);
+        row.appendChild(infoBlock);
+        const metricsBlock = document.createElement('div');
+        metricsBlock.innerHTML = metricsHtml;
+        metricsBlock.className = 'metrics-block-outer';
+        metricsBlock.style.flex = '1 1 0';
+        metricsBlock.style.marginLeft = '18px';
+        row.appendChild(metricsBlock);
+        // Row selection logic: select on click anywhere except links
+        row.onclick = (e) => {
+            if (e.target.tagName === 'A') return;
             selectedProgramId = node.id;
             window._lastSelectedNodeData = node;
             renderNodeList(allNodeData);
             showSidebarContent(node);
+            showSidebar();
             selectProgram(selectedProgramId);
         };
+        // Parent link logic for list (now uses scrollAndSelectNodeById)
+        setTimeout(() => {
+            const parentLink = row.querySelector('.parent-link');
+            if (parentLink && parentLink.dataset.parent && parentLink.dataset.parent !== 'None' && parentLink.dataset.parent !== '') {
+                parentLink.onclick = function(e) {
+                    e.preventDefault();
+                    scrollAndSelectNodeById(parentLink.dataset.parent);
+                };
+            }
+        }, 0);
         container.appendChild(row);
     });
+    // Update row backgrounds for theme/metric
+    updateListRowBackgroundsForTheme();
 }
 
 // List search/sort events
@@ -515,6 +701,7 @@ function fetchAndRender() {
     fetch('/api/data')
         .then(resp => resp.json())
         .then(data => {
+            archiveProgramIds = Array.isArray(data.archive) ? data.archive : [];
             const dataStr = JSON.stringify(data);
             if (dataStr === lastDataStr) {
                 return;
@@ -577,6 +764,8 @@ function getHighlightNodes(nodes, filter, metric) {
         return nodes.filter(n => n.metrics && n.metrics.error != null);
     } else if (filter === 'unset') {
         return nodes.filter(n => !n.metrics || n.metrics[metric] == null);
+    } else if (filter === 'archive') {
+        return nodes.filter(n => archiveProgramIds.includes(n.id));
     }
     return [];
 }
@@ -637,22 +826,8 @@ metricSelect.addEventListener('change', function() {
             .classed('node-highlighted', highlightIds.has(d.id))
             .attr('r', getNodeRadius(d));
     });
-    // Update list view backgrounds and highlights
-    const container = document.getElementById('node-list-container');
-    if (container) {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        Array.from(container.children).forEach((div, i) => {
-            // Find node by ID in the first child div
-            const idDiv = div.querySelector('div');
-            if (!idDiv) return;
-            const nodeId = idDiv.textContent.replace('ID:', '').trim();
-            const node = allNodeData.find(n => n.id == nodeId);
-            if (node) {
-                div.style.setProperty('background', isDark ? getNodeGrayDark(node, 40, 120) : getNodeGray(node, 120, 230), 'important');
-                div.classList.toggle('highlighted', highlightIds.has(nodeId));
-            }
-        });
-    }
+    // Update list view backgrounds and highlights, and re-render for sort by score
+    renderNodeList(allNodeData);
 });
 
 // Always show sidebar in list view, and adjust node-list width
@@ -716,10 +891,23 @@ function updateListRowBackgroundsForTheme() {
 (function() {
     const perfDiv = document.getElementById('view-performance');
     if (!perfDiv) return;
-    d3.select('#performance-graph').remove();
-    perfDiv.style.overflowY = 'auto';
-    perfDiv.style.position = 'relative';
+    // Modern toggle for show islands
+    let toggleDiv = document.getElementById('perf-island-toggle');
+    if (!toggleDiv) {
+        toggleDiv = document.createElement('div');
+        toggleDiv.id = 'perf-island-toggle';
+        toggleDiv.style = 'margin-bottom:1em;display:flex;align-items:center;gap:0.7em;';
+        toggleDiv.innerHTML = `
+        <label class="toggle-switch" style="margin-right:0.7em;">
+            <input type="checkbox" id="show-islands-toggle">
+            <span class="toggle-slider"></span>
+        </label>
+        <span style="font-weight:500;font-size:1.08em;">Show islands</span>
+        `;
+        perfDiv.insertBefore(toggleDiv, perfDiv.firstChild);
+    }
     function renderPerformanceGraph(nodes) {
+        window.renderPerformanceGraph = renderPerformanceGraph;
         d3.select('#performance-graph').remove();
         // Calculate width: window width - sidebar width - padding
         const sidebarEl = document.getElementById('sidebar');
@@ -730,61 +918,168 @@ function updateListRowBackgroundsForTheme() {
         // X: metric, Y: generation (downwards, open-ended)
         const metric = getSelectedMetric();
         const validNodes = nodes.filter(n => n.metrics && typeof n.metrics[metric] === 'number');
-        if (!validNodes.length) return;
+        const undefinedNodes = nodes.filter(n => !n.metrics || n.metrics[metric] == null || isNaN(n.metrics[metric]));
+        if (!validNodes.length && !undefinedNodes.length) return;
+        // --- ISLAND SPLIT LOGIC ---
+        const showIslands = document.getElementById('show-islands-toggle')?.checked;
+        let islands = [];
+        if (showIslands) {
+            islands = Array.from(new Set(nodes.map(n => n.island))).sort((a,b)=>a-b);
+        } else {
+            islands = [null];
+        }
         // Always start with generation 0
-        const yExtent = d3.extent(validNodes, d => d.generation);
+        const yExtent = d3.extent(nodes, d => d.generation);
         const minGen = 0;
         const maxGen = yExtent[1];
         const xExtent = d3.extent(validNodes, d => d.metrics[metric]);
         const margin = {top: 60, right: 40, bottom: 40, left: 60};
+        const undefinedBoxWidth = 120; // width for undefined score box
         const genCount = (maxGen - minGen + 1) || 1;
-        const height = Math.max(400, genCount * 48 + margin.top + margin.bottom);
+        // Height: one graph per island if split, else one
+        const graphHeight = Math.max(400, genCount * 48 + margin.top + margin.bottom);
+        const height = showIslands ? (graphHeight * islands.length) : graphHeight;
         const svg = d3.select(perfDiv)
             .append('svg')
             .attr('id', 'performance-graph')
             .attr('width', width)
             .attr('height', height)
             .style('display', 'block');
+        // For each island, render its nodes and edges
+        let yScales = {};
+        islands.forEach((island, i) => {
+            const y = d3.scaleLinear()
+                .domain([minGen, maxGen]).nice()
+                .range([margin.top + i*graphHeight, margin.top + (i+1)*graphHeight - margin.bottom]);
+            yScales[island] = y;
+            // Axis
+            svg.append('g')
+                .attr('transform', `translate(${margin.left+undefinedBoxWidth},0)`)
+                .call(d3.axisLeft(y).ticks(Math.min(12, genCount)));
+            // Add headline for each island (now inside the graph area)
+            if (showIslands) {
+                svg.append('text')
+                    .attr('x', (width + undefinedBoxWidth) / 2)
+                    .attr('y', margin.top + i*graphHeight + 8)
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', '2.1em')
+                    .attr('font-weight', 700)
+                    .attr('fill', '#444')
+                    .attr('pointer-events', 'none')
+                    .text(`Island ${island}`);
+            }
+        });
+        // X axis (shared)
         const x = d3.scaleLinear()
             .domain([xExtent[0], xExtent[1]]).nice()
-            .range([margin.left, width - margin.right]);
-        const y = d3.scaleLinear()
-            .domain([minGen, maxGen]).nice()
-            .range([margin.top, height - margin.bottom]);
-        // Axes
+            .range([margin.left+undefinedBoxWidth, width - margin.right]);
         svg.append('g')
             .attr('transform', `translate(0,${margin.top})`)
             .call(d3.axisTop(x))
             .append('text')
-            .attr('x', width/2)
+            .attr('x', (width + undefinedBoxWidth) / 2)
             .attr('y', -35)
             .attr('fill', '#888')
             .attr('text-anchor', 'middle')
             .attr('font-size', '1.1em')
             .text(metric);
-        svg.append('g')
-            .attr('transform', `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y).ticks(Math.min(12, genCount)))
-            .append('text')
-            .attr('transform', 'rotate(-90)')
-            .attr('x', -height/2)
-            .attr('y', -45)
-            .attr('fill', '#888')
-            .attr('text-anchor', 'middle')
-            .attr('font-size', '1.1em')
-            .text('Generation');
+        // Draw undefined score box (left of graph)
+        if (undefinedNodes.length) {
+            islands.forEach((island, i) => {
+                // Only show undefined nodes for this island (or all if not split)
+                const theseNodes = showIslands ? undefinedNodes.filter(n => n.island === island) : undefinedNodes;
+                if (!theseNodes.length) return;
+                // Draw box
+                const y = yScales[island];
+                const boxTop = margin.top + i*graphHeight;
+                const boxBottom = margin.top + (i+1)*graphHeight - margin.bottom;
+                svg.append('rect')
+                    .attr('x', margin.left)
+                    .attr('y', boxTop)
+                    .attr('width', undefinedBoxWidth)
+                    .attr('height', boxBottom - boxTop)
+                    .attr('fill', '#f5f5f5')
+                    .attr('stroke', '#bbb')
+                    .attr('stroke-width', 1.5)
+                    .attr('rx', 12);
+                // Label
+                svg.append('text')
+                    .attr('x', margin.left + undefinedBoxWidth/2)
+                    .attr('y', boxTop + 24)
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', '1.08em')
+                    .attr('fill', '#888')
+                    .text('undefined score');
+                // Draw nodes in box, vertically by generation
+                svg.append('g')
+                    .selectAll('circle')
+                    .data(theseNodes)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', margin.left + undefinedBoxWidth/2)
+                    .attr('cy', d => y(d.generation))
+                    .attr('r', d => getNodeRadius(d))
+                    .attr('fill', d => getNodeColor(d))
+                    .attr('class', d => [selectedProgramId === d.id ? 'node-selected' : ''].join(' ').trim())
+                    .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+                    .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+                    .attr('opacity', 0.85)
+                    .on('mouseover', function(event, d) {
+                        if (selectedProgramId === d.id) return;
+                        showSidebarContent(d);
+                        showSidebar();
+                        d3.select(this)
+                            .classed('node-hovered', true)
+                            .attr('stroke', '#FFD600').attr('stroke-width', 4);
+                    })
+                    .on('mouseout', function(event, d) {
+                        if (selectedProgramId === d.id) return;
+                        showSidebarContent(null);
+                        d3.select(this)
+                            .classed('node-hovered', false)
+                            .attr('stroke', '#333').attr('stroke-width', 1.5);
+                    })
+                    .on('click', function(event, d) {
+                        event.preventDefault(); // Prevent page jump
+                        selectedProgramId = d.id;
+                        window._lastSelectedNodeData = d;
+                        showSidebarContent(d);
+                        showSidebar();
+                        selectProgram(selectedProgramId);
+                        renderPerformanceGraph(nodes);
+                    });
+            });
+        }
         // Highlight logic (same as branching)
         const highlightFilter = document.getElementById('highlight-select').value;
         const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
         const highlightIds = new Set(highlightNodes.map(n => n.id));
-        // Draw nodes as circles
+        // Draw edges (parent-child links, can cross islands)
+        const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+        const edges = nodes.filter(n => n.parent_id && nodeById[n.parent_id] && n.metrics && typeof n.metrics[metric] === 'number' && nodeById[n.parent_id].metrics && typeof nodeById[n.parent_id].metrics[metric] === 'number').map(n => ({
+            source: nodeById[n.parent_id],
+            target: n
+        }));
+        svg.append('g')
+            .selectAll('line')
+            .data(edges)
+            .enter()
+            .append('line')
+            .attr('x1', d => x(d.source.metrics[metric]))
+            .attr('y1', d => showIslands ? yScales[d.source.island](d.source.generation) : yScales[null](d.source.generation))
+            .attr('x2', d => x(d.target.metrics[metric]))
+            .attr('y2', d => showIslands ? yScales[d.target.island](d.target.generation) : yScales[null](d.target.generation))
+            .attr('stroke', '#888')
+            .attr('stroke-width', 1.5)
+            .attr('opacity', 0.5);
+        // Draw nodes as circles (only valid metric nodes)
         svg.append('g')
             .selectAll('circle')
             .data(validNodes)
             .enter()
             .append('circle')
             .attr('cx', d => x(d.metrics[metric]))
-            .attr('cy', d => y(d.generation))
+            .attr('cy', d => showIslands ? yScales[d.island](d.generation) : yScales[null](d.generation))
             .attr('r', d => getNodeRadius(d))
             .attr('fill', d => getNodeColor(d))
             .attr('class', d => [
@@ -810,6 +1105,7 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke', '#333').attr('stroke-width', 1.5);
             })
             .on('click', function(event, d) {
+                event.preventDefault(); // Prevent page jump
                 selectedProgramId = d.id;
                 window._lastSelectedNodeData = d;
                 showSidebarContent(d);
@@ -829,6 +1125,34 @@ function updateListRowBackgroundsForTheme() {
                     .attr('stroke-width', 1.5);
             }
         });
+        // Summary bar at top (match list tab style)
+        let perfSummary = document.getElementById('performance-summary-bar');
+        const allScores = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && !isNaN(x));
+        const minScore = allScores.length ? Math.min(...allScores) : 0;
+        const maxScore = allScores.length ? Math.max(...allScores) : 1;
+        const topScore = allScores.length ? Math.max(...allScores) : 0;
+        const avgScore = allScores.length ? (allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+        if (!perfSummary) {
+            perfSummary = document.createElement('div');
+            perfSummary.id = 'performance-summary-bar';
+            perfSummary.className = 'list-summary-bar';
+            perfDiv.insertBefore(perfSummary, perfDiv.firstChild);
+        }
+        perfSummary.style.paddingTop = '2.2em';
+        perfSummary.innerHTML = `
+          <div class="summary-block">
+            <span class="summary-icon">🏆</span>
+            <span class="summary-label">Top score</span>
+            <span class="summary-value">${topScore.toFixed(4)}</span>
+            ${renderMetricBar(topScore, minScore, maxScore)}
+          </div>
+          <div class="summary-block">
+            <span class="summary-icon">📊</span>
+            <span class="summary-label">Average</span>
+            <span class="summary-value">${avgScore.toFixed(4)}</span>
+            ${renderMetricBar(avgScore, minScore, maxScore)}
+          </div>
+        `;
     }
     // Hook into fetchAndRender to update performance graph
     const origFetchAndRender = fetchAndRender;
@@ -856,4 +1180,21 @@ function updateListRowBackgroundsForTheme() {
             renderPerformanceGraph(allNodeData);
         }
     });
+    // Toggle event
+    document.getElementById('show-islands-toggle').addEventListener('change', function() {
+        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
+            renderPerformanceGraph(allNodeData);
+        }
+    });
+})();
+
+// --- Add highlight option for MAP-elites archive ---
+(function() {
+    const highlightSelect = document.getElementById('highlight-select');
+    if (highlightSelect && !Array.from(highlightSelect.options).some(o => o.value === 'archive')) {
+        const opt = document.createElement('option');
+        opt.value = 'archive';
+        opt.textContent = 'MAP-elites archive';
+        highlightSelect.appendChild(opt);
+    }
 })();
