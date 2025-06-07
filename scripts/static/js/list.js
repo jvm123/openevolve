@@ -2,86 +2,6 @@ import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHigh
 import { showSidebar, setSidebarSticky, showSidebarContent } from './sidebar.js';
 import { selectProgram, scrollAndSelectNodeById } from './graph.js';
 
-// Node list rendering and logic
-/*function getNodeBackgroundLight(d, min = 120, max = 230) {
-    let minScore = Infinity, maxScore = -Infinity;
-    const metric = getSelectedMetric();
-    if (Array.isArray(allNodeData) && allNodeData.length > 0) {
-        allNodeData.forEach(n => {
-            if (n.metrics && typeof n.metrics[metric] === "number") {
-                if (n.metrics[metric] < minScore) minScore = n.metrics[metric];
-                if (n.metrics[metric] > maxScore) maxScore = n.metrics[metric];
-            }
-        });
-        if (minScore === Infinity) minScore = 0;
-        if (maxScore === -Infinity) maxScore = 1;
-    } else {
-        minScore = 0;
-        maxScore = 1;
-    }
-    let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
-    if (score === null || isNaN(score)) {
-        return `rgb(${min},${min},${min})`;
-    }
-    if (maxScore === minScore) {
-        const g = Math.round((min+max)/2);
-        return `rgb(${g},${g},${g})`;
-    }
-    const val = Math.round(max - (max - min) * (maxScore - score) / (maxScore - minScore));
-    return `rgb(${val},${val},${val})`;
-}*/
-
-// For dark mode, update backgrounds using a blue-tinted scale and same logic
-/*function getNodeBackgroundDark(d, min = 40, max = 120) {
-    // min: darkest, max: lightest (0-255)
-    let minScore = Infinity, maxScore = -Infinity;
-    const metric = getSelectedMetric();
-    if (Array.isArray(allNodeData) && allNodeData.length > 0) {
-        allNodeData.forEach(n => {
-            if (n.metrics && typeof n.metrics[metric] === "number") {
-                if (n.metrics[metric] < minScore) minScore = n.metrics[metric];
-                if (n.metrics[metric] > maxScore) maxScore = n.metrics[metric];
-            }
-        });
-        if (minScore === Infinity) minScore = 0;
-        if (maxScore === -Infinity) maxScore = 1;
-    } else {
-        minScore = 0;
-        maxScore = 1;
-    }
-    let score = d.metrics && typeof d.metrics[metric] === "number" ? d.metrics[metric] : null;
-    if (score === null || isNaN(score)) {
-        return `rgb(${min},${min+10},${min+20})`;
-    }
-    if (maxScore === minScore) {
-        const g = Math.round((min+max)/2);
-        return `rgb(${g},${g+10},${g+20})`;
-    }
-    const val = Math.round(max - (max - min) * (maxScore - score) / (maxScore - minScore));
-    return `rgb(${val},${val+10},${val+20})`;
-}*/
-
-/*export function updateListRowBackgroundsForTheme() {
-    const container = document.getElementById('node-list-container');
-    if (!container) return;
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const metric = getSelectedMetric();
-    const highlightFilter = document.getElementById('highlight-select').value;
-    const highlightNodes = getHighlightNodes(allNodeData, highlightFilter, metric);
-    const highlightIds = new Set(highlightNodes.map(n => n.id));
-    Array.from(container.children).forEach(div => {
-        // Find node by ID in the first child div
-        const idDiv = div.querySelector('div');
-        if (!idDiv) return;
-        const nodeId = idDiv.textContent.replace('ID:', '').trim();
-        const node = allNodeData.find(n => n.id == nodeId);
-        if (node) {
-            div.style.setProperty('background', isDark ? getNodeBackgroundDark(node, 40, 120) : getNodeBackgroundLight(node, 120, 230), 'important');
-            div.classList.toggle('highlighted', highlightIds.has(nodeId));
-        }
-    });
-}*/
-
 export function renderNodeList(nodes) {
     setAllNodeData(nodes);
     const container = document.getElementById('node-list-container');
@@ -213,7 +133,6 @@ export function renderNodeList(nodes) {
         }, 0);
         container.appendChild(row);
     });
-    //updateListRowBackgroundsForTheme();
 }
 
 // List search/sort events
@@ -231,7 +150,7 @@ highlightSelect.addEventListener('change', function() {
 });
 
 if (document.getElementById('list-sort')) {
-    document.getElementById('list-sort').value = 'generation';
+    document.getElementById('list-sort').value = 'score';
 }
 
 const viewList = document.getElementById('view-list');

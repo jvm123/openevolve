@@ -1,7 +1,7 @@
 // main.js for OpenEvolve Evolution Visualizer
 
 import { sidebarSticky, showSidebarContent } from './sidebar.js';
-import { updateListSidebarLayout, /*updateListRowBackgroundsForTheme,*/ renderNodeList } from './list.js';
+import { updateListSidebarLayout, renderNodeList } from './list.js';
 import { renderGraph, g, getNodeRadius } from './graph.js';
 
 export let allNodeData = [];

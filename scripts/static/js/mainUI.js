@@ -1,4 +1,3 @@
-//import { updateListRowBackgroundsForTheme } from './list.js';
 import { width, height, selectedProgramId } from './main.js';
 import { selectProgram } from './graph.js';
 import { showSidebarContent } from './sidebar.js';
@@ -55,7 +54,6 @@ function setTheme(theme) {
     localStorage.setItem('theme', theme);
     document.getElementById('darkmode-toggle').checked = (theme === 'dark');
     document.getElementById('darkmode-label').textContent = theme === 'dark' ? '🌙' : '☀️';
-    //updateListRowBackgroundsForTheme();
 }
 function getSystemTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
