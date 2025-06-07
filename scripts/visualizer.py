@@ -29,9 +29,12 @@ HTML_TEMPLATE = """
             align-items: center;
             gap: 2em;
             background: var(--toolbar-bg);
-            border-bottom: 1px solid #ddd;
             padding: 0.5em 0 0.5em 0.5em;
             margin-bottom: 0.5em;
+            box-sizing: border-box;
+            width: 100vw;
+            max-width: 100vw;
+            overflow-x: auto;
         }
         .tabs {
             display: flex;
@@ -92,10 +95,18 @@ HTML_TEMPLATE = """
         #view-branching.active, #view-performance.active, #view-prompts.active {
             display: block;
         }
+        /* Make sure toolbar content never overflows horizontally */
+        @media (max-width: 1200px) {
+            #toolbar {
+                flex-wrap: wrap;
+                gap: 1em;
+                padding-right: 1em;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="toolbar" style="position:fixed;top:0;left:0;width:100vw;z-index:100;background:var(--toolbar-bg);box-shadow:0 2px 8px #eee;display:flex;align-items:center;gap:1.5em;padding:0.3em 1em 0.3em 1em;">
+    <div id="toolbar" style="position:fixed;top:0;left:0;width:100vw;z-index:100;background:var(--toolbar-bg);box-shadow:0 2px 8px #eee;display:flex;align-items:center;gap:1.5em;padding:0.3em 1em 0.3em 1em;box-sizing:border-box;max-width:100vw;overflow-x:auto;">
         <div style="display:flex;flex-direction:column;min-width:220px;">
             <span style="font-size:1.1em;font-weight:bold;">OpenEvolve Evolution Visualizer</span>
             <span id="checkpoint-label" style="font-size:0.9em;color:#666;">Checkpoint: None</span>
@@ -118,15 +129,10 @@ HTML_TEMPLATE = """
         <select id="metric-select" style="font-size:1em;margin-left:0.5em;">
             <option value="combined_score" selected>combined_score</option>
         </select>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:1em;">
-            <label style="display:flex;align-items:center;cursor:pointer;gap:0.3em;">
-                <input type="checkbox" id="darkmode-toggle" style="accent-color:#0074d9;">
-                <span id="darkmode-label" style="font-size:1.1em;">🌙</span>
-            </label>
-            <div id="sidebar-toggle" title="Show/hide sidebar"
-                style="cursor:pointer;font-size:1.5em;padding:0.2em 0.5em;user-select:none;">
-                ☰
-            </div>
+        <div style="margin-left:auto;display:flex;align-items:center;cursor:pointer;gap:0.3em;min-width:120px;">
+            <label style="margin:0;display:flex;align-items:center;gap:0.3em;">Dark mode:</label>
+            <input type="checkbox" id="darkmode-toggle" style="accent-color:#0074d9;">
+            <span id="darkmode-label" style="font-size:1.1em;">🌙</span>
         </div>
     </div>
     <div id="sidebar" style="position:fixed;top:0;right:0;width:400px;max-width:90vw;height:100vh;background:var(--sidebar-bg);box-shadow:var(--sidebar-shadow);z-index:200;transform:translateX(100%);transition:transform 0.2s;overflow-y:auto;padding:2em 1.5em 1em 1.5em;">
@@ -148,17 +154,33 @@ HTML_TEMPLATE = """
         --text-color: #222;
         --node-default: #fff;
         --node-stroke: #fff;
-        --sidebar-shadow: -2px 0 8px #eee;
+        --sidebar-shadow: -2px 0 24px #aaa;
+        --toolbar-shadow: 0 4px 16px #aaa;
         --main-bg: #f7f7f7;
+        --tab-bg: #eee;
+        --tab-active-bg: #fff;
+        --tab-border: #ddd;
+        --tab-active-border: #fff;
+        --select-bg: #fff;
+        --select-color: #222;
+        --select-border: #ccc;
     }
     [data-theme="dark"] {
         --toolbar-bg: #181a1b;
         --sidebar-bg: #23272a;
-        --text-color: #eee;
+        --text-color: #e6eaf3;
         --node-default: #23272a;
-        --node-stroke: #444;
-        --sidebar-shadow: -2px 0 8px #222;
+        --node-stroke: #3b5ca8;
+        --sidebar-shadow: -8px 0 24px #1e3a8ccc;
+        --toolbar-shadow: 0 4px 16px #1e3a8ccc;
         --main-bg: #181a1b;
+        --tab-bg: #22304a;
+        --tab-active-bg: #1e2a3a;
+        --tab-border: #3b5ca8;
+        --tab-active-border: #3b5ca8;
+        --select-bg: #22304a;
+        --select-color: #e6eaf3;
+        --select-border: #3b5ca8;
     }
     body {
         background: var(--main-bg);
@@ -166,11 +188,38 @@ HTML_TEMPLATE = """
     }
     #toolbar {
         background: var(--toolbar-bg) !important;
+        box-shadow: var(--toolbar-shadow) !important;
     }
     #sidebar {
         background: var(--sidebar-bg) !important;
         box-shadow: var(--sidebar-shadow) !important;
         color: var(--text-color);
+    }
+    .tabs {
+        background: none;
+    }
+    .tab {
+        background: var(--tab-bg);
+        border: 1px solid var(--tab-border);
+        color: var(--text-color);
+    }
+    .tab.active {
+        background: var(--tab-active-bg);
+        border-bottom: 1px solid var(--tab-active-border);
+        color: var(--text-color);
+    }
+    .toolbar-label {
+        color: var(--text-color);
+    }
+    select {
+        background: var(--select-bg);
+        color: var(--select-color);
+        border: 1px solid var(--select-border);
+        border-radius: 4px;
+        padding: 0.2em 0.5em;
+    }
+    #darkmode-toggle {
+        accent-color: #3b5ca8;
     }
     </style>
     <script>
@@ -250,8 +299,8 @@ HTML_TEMPLATE = """
             `<b>Program ID:</b> ${d.id}<br>` +
             `<b>Island:</b> ${d.island}<br>` +
             `<b>Generation:</b> ${d.generation}<br>` +
-            `<b>Parent ID:</b> ${d.parent_id || 'None'}<br>` +
-            `<b>Metrics:</b><br>${formatMetrics(d.metrics)}<br>` +
+            `<b>Parent ID:</b> ${d.parent_id || 'None'}<br><br>` +
+            `<b>Metrics:</b><br>${formatMetrics(d.metrics)}<br><br>` +
             `<b>Code:</b><pre>${d.code.replace(/</g, '&lt;')}</pre>`;
         showSidebar();
     }
