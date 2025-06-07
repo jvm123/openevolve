@@ -3,7 +3,6 @@ import json
 import glob
 import logging
 from flask import Flask, render_template_string, jsonify
-from pathlib import Path
 
 app = Flask(__name__)
 
@@ -17,13 +16,19 @@ HTML_TEMPLATE = """
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         html, body { height: 100%; margin: 0; padding: 0 1em; }
-        body { font-family: Arial, sans-serif; background: #f7f7f7; height: 100vh; width: 100vw; }
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--main-bg);
+            color: var(--text-color);
+            height: 100vh;
+            width: 100vw;
+        }
         h1 span { font-size: 0.5em; color: #666; }
         #toolbar {
             display: flex;
             align-items: center;
             gap: 2em;
-            background: #fff;
+            background: var(--toolbar-bg);
             border-bottom: 1px solid #ddd;
             padding: 0.5em 0 0.5em 0.5em;
             margin-bottom: 0.5em;
@@ -54,7 +59,7 @@ HTML_TEMPLATE = """
             margin-left: 0.5em;
         }
         #graph { width: 100vw; height: 100vh; }
-        .node circle { stroke: #fff; stroke-width: 2px; }
+        .node circle { stroke: var(--node-stroke); stroke-width: 2px; }
         .node text { pointer-events: none; font-size: 12px; }
         .link { stroke: #999; stroke-opacity: 0.6; }
         .tooltip {
@@ -90,7 +95,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <div id="toolbar" style="position:fixed;top:0;left:0;width:100vw;z-index:100;background:#fff;box-shadow:0 2px 8px #eee;display:flex;align-items:center;gap:1.5em;padding:0.3em 1em 0.3em 1em;">
+    <div id="toolbar" style="position:fixed;top:0;left:0;width:100vw;z-index:100;background:var(--toolbar-bg);box-shadow:0 2px 8px #eee;display:flex;align-items:center;gap:1.5em;padding:0.3em 1em 0.3em 1em;">
         <div style="display:flex;flex-direction:column;min-width:220px;">
             <span style="font-size:1.1em;font-weight:bold;">OpenEvolve Evolution Visualizer</span>
             <span id="checkpoint-label" style="font-size:0.9em;color:#666;">Checkpoint: None</span>
@@ -100,7 +105,10 @@ HTML_TEMPLATE = """
             <div class="tab" id="tab-performance">Performance</div>
             <div class="tab" id="tab-prompts">Prompts</div>
         </div>
-        <label class="toolbar-label" for="highlight-select" style="margin-left:2em;">Highlight:</label>
+        <label class="toolbar-label" for="highlight-select"
+               style="margin-left:2em;">
+            Highlight:
+        </label>
         <select id="highlight-select" style="font-size:1em;margin-left:0.5em;">
             <option value="best" selected>Best</option>
             <option value="first">First</option>
@@ -110,12 +118,61 @@ HTML_TEMPLATE = """
         <select id="metric-select" style="font-size:1em;margin-left:0.5em;">
             <option value="combined_score" selected>combined_score</option>
         </select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:1em;">
+            <label style="display:flex;align-items:center;cursor:pointer;gap:0.3em;">
+                <input type="checkbox" id="darkmode-toggle" style="accent-color:#0074d9;">
+                <span id="darkmode-label" style="font-size:1.1em;">🌙</span>
+            </label>
+            <div id="sidebar-toggle" title="Show/hide sidebar"
+                style="cursor:pointer;font-size:1.5em;padding:0.2em 0.5em;user-select:none;">
+                ☰
+            </div>
+        </div>
+    </div>
+    <div id="sidebar" style="position:fixed;top:0;right:0;width:400px;max-width:90vw;height:100vh;background:var(--sidebar-bg);box-shadow:var(--sidebar-shadow);z-index:200;transform:translateX(100%);transition:transform 0.2s;overflow-y:auto;padding:2em 1.5em 1em 1.5em;">
+        <div id="sidebar-content">
+            <span style="color:#888;">
+                Select a node to see details.
+            </span>
+        </div>
     </div>
     <div id="view-branching" class="active" style="padding-top:3.5em;">
         <div id="graph"></div>
     </div>
     <div id="view-performance" style="padding-top:3.5em;"></div>
     <div id="view-prompts" style="padding-top:3.5em;"></div>
+    <style id="theme-style">
+    :root {
+        --toolbar-bg: #fff;
+        --sidebar-bg: #fff;
+        --text-color: #222;
+        --node-default: #fff;
+        --node-stroke: #fff;
+        --sidebar-shadow: -2px 0 8px #eee;
+        --main-bg: #f7f7f7;
+    }
+    [data-theme="dark"] {
+        --toolbar-bg: #181a1b;
+        --sidebar-bg: #23272a;
+        --text-color: #eee;
+        --node-default: #23272a;
+        --node-stroke: #444;
+        --sidebar-shadow: -2px 0 8px #222;
+        --main-bg: #181a1b;
+    }
+    body {
+        background: var(--main-bg);
+        color: var(--text-color);
+    }
+    #toolbar {
+        background: var(--toolbar-bg) !important;
+    }
+    #sidebar {
+        background: var(--sidebar-bg) !important;
+        box-shadow: var(--sidebar-shadow) !important;
+        color: var(--text-color);
+    }
+    </style>
     <script>
     // Tab switching logic
     const tabs = ["branching", "performance", "prompts"];
@@ -128,6 +185,35 @@ HTML_TEMPLATE = """
             this.classList.add('active');
             document.getElementById(`view-${tab}`).classList.add('active');
         });
+    });
+
+    // Sidebar logic (automatic show/hide)
+    const sidebar = document.getElementById('sidebar');
+    function showSidebar() {
+        sidebar.style.transform = 'translateX(0)';
+    }
+    function hideSidebar() {
+        sidebar.style.transform = 'translateX(100%)';
+    }
+
+    // Dark mode logic
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        document.getElementById('darkmode-toggle').checked = (theme === 'dark');
+        document.getElementById('darkmode-label').textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
+    function getSystemTheme() {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    // On load, use localStorage or system default
+    (function() {
+        let theme = localStorage.getItem('theme');
+        if (!theme) theme = getSystemTheme();
+        setTheme(theme);
+    })();
+    document.getElementById('darkmode-toggle').addEventListener('change', function() {
+        setTheme(this.checked ? 'dark' : 'light');
     });
 
     let width = window.innerWidth;
@@ -146,84 +232,45 @@ HTML_TEMPLATE = """
 
     const g = svg.append("g");
 
-    const tooltip = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
     let lastDataStr = null;
-    let sticky = false;
     let selectedProgramId = null;
 
     function formatMetrics(metrics) {
         return Object.entries(metrics).map(([k, v]) => `<b>${k}</b>: ${v}`).join('<br>');
     }
 
-    function showTooltip(event, d) {
-        if (sticky) return;
-        resetTooltip(false);
-        tooltip.transition().duration(200).style("opacity", .95);
-        tooltip.html(
+    function showSidebarContent(d) {
+        if (!d) {
+            document.getElementById('sidebar-content').innerHTML =
+                '<span style="color:#888;">Select a node to see details.</span>';
+            hideSidebar();
+            return;
+        }
+        document.getElementById('sidebar-content').innerHTML =
             `<b>Program ID:</b> ${d.id}<br>` +
             `<b>Island:</b> ${d.island}<br>` +
             `<b>Generation:</b> ${d.generation}<br>` +
             `<b>Parent ID:</b> ${d.parent_id || 'None'}<br>` +
             `<b>Metrics:</b><br>${formatMetrics(d.metrics)}<br>` +
-            `<b>Code:</b><pre>${d.code.replace(/</g, '&lt;')}</pre>`
-        )
-        .style("left", (event.pageX + 20) + "px")
-        .style("top", (event.pageY - 20) + "px");
-
-        d3.select(event.target)
-            .transition()
-            .duration(200)
-            .attr("stroke", "#000")
-            .attr("stroke-width", 3);
-    }
-    function showTooltipSticky(event, d) {
-        sticky = false;
-        showTooltip(event, d);
-        sticky = true;
-        selectedProgramId = d.id;
-    }
-
-    function hideTooltip(event, d) {
-        if (sticky) return;
-        tooltip.transition().duration(300).style("opacity", 0);
-        selectedProgramId = null;
-
-        d3.selectAll("circle")
-            .transition()
-            .duration(200)
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 1.5);
-    }
-    function resetTooltip(event = false, d = null) {
-        // Only reset if the click target is the SVG itself (not a node)
-        if (!event || event.target === this) {
-            sticky = false;
-            hideTooltip(event, d);
-        }
+            `<b>Code:</b><pre>${d.code.replace(/</g, '&lt;')}</pre>`;
+        showSidebar();
     }
 
     function openInNewTab(event, d) {
         const url = `/program/${d.id}`;
         window.open(url, '_blank');
-        event.stopPropagation(); // Prevent tooltip from closing
+        event.stopPropagation();
     }
 
     function getNodeColor(d) {
-        return d.island !== undefined ? d3.schemeCategory10[d.island % 10] : "#888";
+        if (d.island !== undefined) return d3.schemeCategory10[d.island % 10];
+        return getComputedStyle(document.documentElement)
+            .getPropertyValue('--node-default').trim() || "#fff";
     }
 
-    // Use the selected metric from the select box
     function getSelectedMetric() {
         const metricSelect = document.getElementById('metric-select');
         return metricSelect ? metricSelect.value : 'overall_score';
-    }
-
-    function getNodeSuccess(d) {
-        const metric = getSelectedMetric();
-        return d.metrics && typeof d.metrics[metric] === "number" && !d.metrics.error;
     }
 
     function getNodeRadius(d) {
@@ -250,20 +297,12 @@ HTML_TEMPLATE = """
                 d3.select(this)
                     .transition()
                     .duration(200)
-                    .attr("stroke", "#fff")
+                    .attr("stroke",
+                        getComputedStyle(document.documentElement)
+                            .getPropertyValue('--node-stroke').trim() || "#fff")
                     .attr("stroke-width", 1.5);
             }
         });
-        // Scroll to the selected program
-        const selectedNode = nodes.filter(d => d.id === programId);
-        if (selectedNode.empty()) return;
-        const bbox = selectedNode.node().getBoundingClientRect();
-        const svgRect = svg.node().getBoundingClientRect();
-        const scrollX = bbox.left - svgRect.left + bbox.width / 2 - width / 2;
-        const scrollY = bbox.top - svgRect.top + bbox.height / 2 - height / 2;
-        svg.transition()
-            .duration(500)
-            .call(d3.zoom().transform, d3.zoomIdentity.translate(-scrollX, -scrollY).scale(1));
     }
 
     function renderGraph(data) {
@@ -282,17 +321,48 @@ HTML_TEMPLATE = """
             .attr("stroke-width", 2);
 
         const node = g.append("g")
-            .attr("stroke", "#fff")
+            .attr("stroke",
+                getComputedStyle(document.documentElement)
+                    .getPropertyValue('--node-stroke').trim() || "#fff")
             .attr("stroke-width", 1.5)
             .selectAll("circle")
             .data(data.nodes)
             .enter().append("circle")
             .attr("r", d => getNodeRadius(d))
             .attr("fill", d => getNodeColor(d))
-            .on("mouseover", showTooltip)
-            .on("click", showTooltipSticky)
+            .on("click", function(event, d) {
+                selectedProgramId = d.id;
+                showSidebarContent(d);
+                showSidebar();
+                selectProgram(selectedProgramId);
+                event.stopPropagation();
+            })
             .on("dblclick", openInNewTab)
-            .on("mouseout", hideTooltip)
+            .on("mouseover", function(event, d) {
+                if (!selectedProgramId) {
+                    showSidebarContent(d);
+                    showSidebar();
+                    // Highlight hovered node with yellow border
+                    d3.select(this)
+                        .transition()
+                        .duration(100)
+                        .attr("stroke", "#FFD600")
+                        .attr("stroke-width", 4);
+                }
+            })
+            .on("mouseout", function(event, d) {
+                if (!selectedProgramId) {
+                    showSidebarContent(null);
+                    // Remove yellow border highlight
+                    d3.select(this)
+                        .transition()
+                        .duration(100)
+                        .attr("stroke",
+                            getComputedStyle(document.documentElement)
+                                .getPropertyValue('--node-stroke').trim() || "#fff")
+                        .attr("stroke-width", 1.5);
+                }
+            })
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
@@ -311,26 +381,39 @@ HTML_TEMPLATE = """
                 .attr("cy", d => d.y);
         });
 
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-
         selectProgram(selectedProgramId);
     }
 
-    // Add background click handler to reset tooltip
-    svg.on("click", resetTooltip);
+    // D3 drag handlers
+    function dragstarted(event, d) {
+        if (!event.active) event.subject.fx = event.subject.x;
+        if (!event.active) event.subject.fy = event.subject.y;
+    }
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    function dragended(event, d) {
+        if (!event.active) {
+            d.fx = null;
+            d.fy = null;
+        }
+    }
+
+    // Click background to unselect node and reset sidebar (and hide sidebar)
+    svg.on("click", function(event) {
+        if (event.target === svg.node()) {
+            selectedProgramId = null;
+            showSidebarContent(null);
+            // Reset all node highlights
+            const nodes = g.selectAll("circle");
+            nodes.transition().duration(200)
+                .attr("stroke",
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue('--node-stroke').trim() || "#fff")
+                .attr("stroke-width", 1.5);
+        }
+    });
 
     function fetchAndRender() {
         fetch('/api/data')
@@ -345,7 +428,8 @@ HTML_TEMPLATE = """
                 renderGraph(data);
 
                 // set checkpoint label in toolbar
-                document.getElementById('checkpoint-label').textContent = "Checkpoint: " + data.checkpoint_dir;
+                document.getElementById('checkpoint-label').textContent =
+                    "Checkpoint: " + data.checkpoint_dir;
 
                 // update metric-select options. keep the selected option.
                 const metricSelect = document.getElementById('metric-select');
@@ -492,7 +576,6 @@ def data():
     if not checkpoint_dir:
         logger.info(f"No checkpoints found in {base_folder}")
         return jsonify({"nodes": [], "edges": [], "checkpoint_dir": ""})
-
 
     logger.info(f"Loading data from checkpoint: {checkpoint_dir}")
     data = load_evolution_data(checkpoint_dir)
