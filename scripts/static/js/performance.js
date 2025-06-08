@@ -13,7 +13,7 @@ import { selectListNodeById } from './list.js';
             toggleDiv.id = 'perf-island-toggle';
             toggleDiv.style = 'display:flex;align-items:center;gap:0.7em;';
             toggleDiv.innerHTML = `
-            <label class="toggle-switch" style="margin-right:0.7em;">
+            <label class="toggle-switch" style="margin-left:1em;">
                 <input type="checkbox" id="show-islands-toggle">
                 <span class="toggle-slider"></span>
             </label>

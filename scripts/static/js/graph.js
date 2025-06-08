@@ -1,4 +1,5 @@
-import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId, lastDataStr } from './main.js';
+import { getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId, lastDataStr } from './main.js';
+import { width, height } from './state.js';
 import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky, hideSidebar } from './sidebar.js';
 import { renderNodeList, selectListNodeById } from './list.js';
 
@@ -117,7 +118,7 @@ Object.defineProperty(window, 'g', {
 });
 
 function ensureGraphSvg() {
-    // Get latest width/height from main.js
+    // Get latest width/height from state.js
     let svgEl = d3.select('#graph').select('svg');
     if (svgEl.empty()) {
         svgEl = d3.select('#graph').append('svg')
