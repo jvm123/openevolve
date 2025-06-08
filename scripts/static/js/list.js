@@ -62,30 +62,33 @@ export function renderNodeList(nodes) {
         row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
         row.setAttribute('data-node-id', node.id); // for parent scroll
         row.tabIndex = 0;
-        let score = node.metrics && typeof node.metrics[metric] === 'number' ? node.metrics[metric] : null;
-        let percent = 0;
-        if (score !== null && !isNaN(score) && maxScore > minScore) {
-            percent = (score - minScore) / (maxScore - minScore);
-            percent = Math.max(0, Math.min(1, percent));
+        // Selected metric block with metrics-bar and more padding
+        let selectedMetricHtml = '';
+        if (node.metrics && metric in node.metrics) {
+            let val = (typeof node.metrics[metric] === 'number' && isFinite(node.metrics[metric])) ? node.metrics[metric].toFixed(4) : node.metrics[metric];
+            // Compute min/max for the selected metric
+            let allVals = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && isFinite(x));
+            let minV = allVals.length ? Math.min(...allVals) : 0;
+            let maxV = allVals.length ? Math.max(...allVals) : 1;
+            selectedMetricHtml = `<div class="selected-metric-block" style="font-weight:bold;font-size:1.08em;padding-bottom:1.5em;">
+                ${metric}: <span style="font-weight:normal;">${val}</span>
+                ${renderMetricBar(node.metrics[metric], minV, maxV)}
+            </div>`;
         }
-        const bar = document.createElement('div');
-        bar.className = 'fitness-bar';
-        bar.innerHTML = `
-            <span class="fitness-bar-max">${maxScore.toFixed(2)}</span>
-            <span class="fitness-bar-min">${minScore.toFixed(2)}</span>
-            <div class="fitness-bar-fill" style="height:${Math.round(percent * 100)}%;"></div>
-        `;
         const infoBlock = document.createElement('div');
         infoBlock.className = 'node-info-block';
         infoBlock.innerHTML = `
+            ${selectedMetricHtml}
             <div><b>ID:</b> ${node.id}</div>
             <div><b>Gen:</b> ${node.generation ?? ''}</div>
             <div><b>Island:</b> ${node.island ?? ''}</div>
             <div><b>Parent:</b> <a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></div>
         `;
+        // Metrics block (remove selected metric)
         let metricsHtml = '<div class="metrics-block">';
         if (node.metrics) {
             Object.entries(node.metrics).forEach(([k, v]) => {
+                if (k === metric) return; // skip selected metric
                 let val = (typeof v === 'number' && isFinite(v)) ? v.toFixed(4) : v;
                 let allVals = nodes.map(n => (n.metrics && typeof n.metrics[k] === 'number') ? n.metrics[k] : null).filter(x => x !== null && isFinite(x));
                 let minV = allVals.length ? Math.min(...allVals) : 0;
@@ -94,17 +97,16 @@ export function renderNodeList(nodes) {
             });
         }
         metricsHtml += '</div>';
-        // Flexbox layout: fitness bar | info block | metrics block
+        // Flexbox layout: info block | metrics block
         row.style.display = 'flex';
         row.style.alignItems = 'stretch';
         row.style.gap = '32px';
-        row.style.padding = '12px 8px';
+        row.style.padding = '12px 8px 0 2em';
         row.style.margin = '0 0 10px 0';
         row.style.borderRadius = '8px';
         row.style.border = selectedProgramId === node.id ? '2.5px solid red' : '1.5px solid #4442';
         row.style.boxShadow = highlightIds.has(node.id) ? '0 0 0 2px #2196f3' : 'none';
         row.style.background = '';
-        row.appendChild(bar);
         row.appendChild(infoBlock);
         const metricsBlock = document.createElement('div');
         metricsBlock.innerHTML = metricsHtml;
