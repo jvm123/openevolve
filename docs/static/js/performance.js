@@ -138,7 +138,7 @@ import { selectListNodeById } from './list.js';
         }
         const metricSelect = document.getElementById('metric-select');
         metricSelect.addEventListener('change', function() {
-            animatePerformanceGraphAttributes();
+            updatePerformanceGraph(allNodeData);
         });
         const highlightSelect = document.getElementById('highlight-select');
         highlightSelect.addEventListener('change', function() {
@@ -347,14 +347,18 @@ function updatePerformanceGraph(nodes, options = {}) {
     const x = d3.scaleLinear()
         .domain([xExtent[0], xExtent[1]]).nice()
         .range([margin.left+graphXOffset, width - margin.right]);
+    // Remove old x axis and label only
+    g.selectAll('.x-axis, .x-axis-label').remove();
+    // Add x axis group
     g.append('g')
-        .attr('class', 'axis')
+        .attr('class', 'axis x-axis')
         .attr('transform', `translate(0,${margin.top})`)
-        .call(d3.axisTop(x))
-        .append('text')
-        .attr('class', 'axis-label')
+        .call(d3.axisTop(x));
+    // Add x axis label
+    g.append('text')
+        .attr('class', 'x-axis-label')
         .attr('x', (width + undefinedBoxWidth) / 2)
-        .attr('y', -35)
+        .attr('y', margin.top - 28) // just below the axis
         .attr('fill', '#888')
         .attr('text-anchor', 'middle')
         .attr('font-size', '1.1em')
