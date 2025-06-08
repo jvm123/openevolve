@@ -75,6 +75,11 @@ if (window.STATIC_DATA) {
         fetch('/api/data')
             .then(resp => resp.json())
             .then(data => {
+                const dataStr = JSON.stringify(data);
+                if (dataStr === lastDataStr) {
+                    return;
+                }
+                lastDataStr = dataStr;
                 loadAndRenderData(data);
             });
     }
@@ -208,4 +213,4 @@ export function setSelectedProgramId(id) {
     selectedProgramId = id;
 }
 
-export { archiveProgramIds, lastDataStr, selectedProgramId, formatMetrics, renderMetricBar, fetchAndRender, getHighlightNodes, getSelectedMetric };
+export { archiveProgramIds, lastDataStr, selectedProgramId, formatMetrics, renderMetricBar, getHighlightNodes, getSelectedMetric };

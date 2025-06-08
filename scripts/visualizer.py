@@ -8,7 +8,6 @@ from flask import Flask, render_template, render_template_string, jsonify
 logger = logging.getLogger("openevolve.visualizer")
 app = Flask(__name__, template_folder="templates")
 
-
 def find_latest_checkpoint(base_folder):
     # Check whether the base folder is itself a checkpoint folder
     if os.path.basename(base_folder).startswith("checkpoint_"):
@@ -102,15 +101,16 @@ def program_page(program_id):
 
 def static_export(output_path, base_folder):
     import re
-    # 1. Find latest checkpoint and load data
+    # Find latest checkpoint and load data
     checkpoint_dir = find_latest_checkpoint(base_folder)
     if not checkpoint_dir:
         raise RuntimeError(f"No checkpoint found in {base_folder}")
     data = load_evolution_data(checkpoint_dir)
     logger.info(f"Exporting visualization for checkpoint: {checkpoint_dir}")
 
-    # 2. Read and concatenate all JS and CSS files
-    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    # Read and concatenate all JS and CSS files
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
     js_files = [
         'js/main.js',
         'js/mainUI.js',
@@ -120,17 +120,54 @@ def static_export(output_path, base_folder):
         'js/list.js',
     ]
     css_files = ['css/main.css']
+    
+    def strip_import_export(js):
+        lines = js.splitlines()
+        filtered = []
+        exports = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('import '):
+                continue
+            if stripped.startswith('export {'):
+                # Collect exported names from export block
+                names = re.findall(r'\b([a-zA-Z0-9_]+)\b', line)
+                exports.extend([n for n in names if n != 'export'])
+                continue
+            if stripped.startswith('export '):
+                # Remove 'export ' from function/const/class declarations
+                m = re.match(r'export (function|const|let|var|class) ([a-zA-Z0-9_]+)', stripped)
+                if m:
+                    exports.append(m.group(2))
+                filtered.append(line.replace('export ', '', 1))
+                continue
+            filtered.append(line)
+        return '\n'.join(filtered), exports
+
     js_code = ''
+    global_exports = set()
     for jsf in js_files:
         with open(os.path.join(static_dir, jsf), 'r', encoding='utf-8') as f:
-            js_code += f"\n// ---- {jsf} ----\n" + f.read()
+            file_content = f.read()
+            file_content, exports = strip_import_export(file_content)
+            export_lines = ''
+            for sym in exports:
+                export_lines += f'\nwindow.{sym} = {sym};'
+                global_exports.add(sym)
+            js_code += (
+                f"\n// ---- {jsf} ----\n(function(){{\n"
+                f"{file_content}\n"
+                f"{export_lines}\n"
+                f"}})();\n"
+            )
+            
     css_code = ''
     for cssf in css_files:
         with open(os.path.join(static_dir, cssf), 'r', encoding='utf-8') as f:
             css_code += f"\n/* ---- {cssf} ---- */\n" + f.read()
 
     # Fetch the HTML template
-    template_path = os.path.join(static_dir, 'templates', 'index.html')
+    template_path = os.path.join(templates_dir, 'index.html')
     with open(template_path, 'r', encoding='utf-8') as f:
         html = f.read()
 
@@ -179,6 +216,8 @@ if __name__ == "__main__":
         help="Produce a static HTML export at this path and exit."
     )
     args = parser.parse_args()
+
+    logger.info(f"Current working directory: {os.getcwd()}")
 
     if args.static_html:
         static_export(args.static_html, args.path)

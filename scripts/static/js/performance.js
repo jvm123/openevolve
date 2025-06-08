@@ -1,4 +1,4 @@
-import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, fetchAndRender, getSelectedMetric, selectedProgramId, setSelectedProgramId } from './main.js';
+import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, getSelectedMetric, selectedProgramId, setSelectedProgramId } from './main.js';
 import { getNodeRadius, getNodeColor, selectProgram, scrollAndSelectNodeById } from './graph.js';
 import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebarSticky } from './sidebar.js';
 import { selectListNodeById } from './list.js';
