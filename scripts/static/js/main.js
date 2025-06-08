@@ -3,7 +3,6 @@
 import { sidebarSticky, showSidebarContent } from './sidebar.js';
 import { updateListSidebarLayout, renderNodeList } from './list.js';
 import { renderGraph, g, getNodeRadius, animateGraphNodeAttributes } from './graph.js';
-import { width, height, setWidth, setHeight, updateDimensions } from './state.js';
 
 export let allNodeData = [];
 
@@ -61,12 +60,6 @@ function loadAndRenderData(data) {
     if (metricSelect.options.length > 0) {
         metricSelect.selectedIndex = 0;
     }
-    // Hide or disable 'open in new window' links in static mode
-    if (window.STATIC_DATA) {
-        document.querySelectorAll('.open-in-new').forEach(el => {
-            el.style.display = 'none';
-        });
-    }
 }
 
 if (window.STATIC_DATA) {
@@ -88,8 +81,13 @@ if (window.STATIC_DATA) {
     setInterval(fetchAndRender, 2000); // Live update every 2s
 }
 
+export let width = window.innerWidth;
+export let height = window.innerHeight;
+
 function resize() {
-    updateDimensions();
+    width = window.innerWidth;
+    const toolbarHeight = document.getElementById('toolbar').offsetHeight;
+    height = window.innerHeight - toolbarHeight;
     // Re-render the graph with new width/height and latest data
     // allNodeData may be [] on first load, so only re-render if nodes exist
     if (allNodeData && allNodeData.length > 0) {

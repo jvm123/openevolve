@@ -27,10 +27,7 @@ export function showSidebarContent(d, fromHover = false) {
     // Locator icon button (left of close X)
     let locatorBtn = '<button id="sidebar-locator-btn" title="Locate selected node" aria-label="Locate selected node" style="position:absolute;top:0.05em;right:2.5em;font-size:1.5em;background:none;border:none;color:#FFD600;cursor:pointer;z-index:10;line-height:1;filter:drop-shadow(0 0 2px #FFD600);">⦿</button>';
     let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:0.05em;right:0.15em;font-size:1.6em;background:none;border:none;color:#888;cursor:pointer;z-index:10;line-height:1;">&times;</button>';
-    let openLink = '';
-    if (!window.STATIC_DATA) {
-        openLink = '<div style="text-align:center;margin:-1em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" class="open-in-new" style="font-size:0.95em;">[open in new window]</a></div>';
-    }
+    let openLink = '<div style="text-align:center;margin:-1em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" class="open-in-new" style="font-size:0.95em;">[open in new window]</a></div>';
     let tabHtml = '';
     let tabContentHtml = '';
     let tabNames = [];
