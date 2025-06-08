@@ -168,7 +168,7 @@ if __name__ == "__main__":
         "--static-output",
         type=str,
         default=None,
-        help="Produce a static HTML export in this directory and exit."
+        help="Produce a static HTML export in this directory and exit.",
     )
     args = parser.parse_args()
 
