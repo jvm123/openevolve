@@ -103,7 +103,7 @@ import { selectListNodeById } from './list.js';
                     target: n
                 };
             });
-            g.selectAll('line')
+            g.selectAll('line.performance-edge')
                 .data(edges, d => d.target.id)
                 .transition().duration(400)
                 .attr('x1', d => {
@@ -181,6 +181,8 @@ export function selectPerformanceNodeById(id, opts = {}) {
 
 let svg = null;
 let g = null;
+let zoomBehavior = null;
+let lastTransform = null;
 
 function updatePerformanceGraph(nodes, options = {}) {
     // Get or create SVG
@@ -198,6 +200,40 @@ function updatePerformanceGraph(nodes, options = {}) {
     if (g.empty()) {
         g = svg.append('g').attr('class', 'zoom-group');
     }
+    // Setup zoom behavior only once
+    if (!zoomBehavior) {
+        zoomBehavior = d3.zoom()
+            .scaleExtent([0.2, 10])
+            .on('zoom', function(event) {
+                g.attr('transform', event.transform);
+                lastTransform = event.transform;
+            });
+        svg.call(zoomBehavior);
+    }
+    // Reapply last transform after update
+    if (lastTransform) {
+        svg.call(zoomBehavior.transform, lastTransform);
+    }
+    // Add SVG background click handler for unselect
+    svg.on('click', function(event) {
+        if (event.target === svg.node()) {
+            setSelectedProgramId(null);
+            setSidebarSticky(false);
+            hideSidebar();
+            // Remove selection from all nodes
+            g.selectAll('circle.performance-node, circle.performance-nan')
+                .classed('node-selected', false)
+                .attr('stroke', function(d) {
+                    // Use highlight color if highlighted, else default
+                    const highlightFilter = document.getElementById('highlight-select').value;
+                    const highlightNodes = getHighlightNodes(nodes, highlightFilter, getSelectedMetric());
+                    const highlightIds = new Set(highlightNodes.map(n => n.id));
+                    return highlightIds.has(d.id) ? '#2196f3' : '#333';
+                })
+                .attr('stroke-width', 1.5);
+            selectListNodeById(null);
+        }
+    });
     // Sizing
     const sidebarEl = document.getElementById('sidebar');
     const padding = 32;

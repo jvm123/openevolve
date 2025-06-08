@@ -1,8 +1,19 @@
-import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
+import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId, lastDataStr } from './main.js';
 import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky, hideSidebar } from './sidebar.js';
 import { renderNodeList, selectListNodeById } from './list.js';
 
 export function scrollAndSelectNodeById(nodeId) {
+    // Helper to get edges from lastDataStr (as in main.js resize)
+    function getCurrentEdges() {
+        let edges = [];
+        if (typeof lastDataStr === 'string') {
+            try {
+                const parsed = JSON.parse(lastDataStr);
+                edges = parsed.edges || [];
+            } catch {}
+        }
+        return edges;
+    }
     const container = document.getElementById('node-list-container');
     if (container) {
         const rows = Array.from(container.children);
@@ -15,7 +26,7 @@ export function scrollAndSelectNodeById(nodeId) {
             showSidebar();
             setSidebarSticky(true);
             selectProgram(selectedProgramId);
-            renderGraph({ nodes: allNodeData, edges: [] }, { centerNodeId: nodeId });
+            renderGraph({ nodes: allNodeData, edges: getCurrentEdges() }, { centerNodeId: nodeId });
             updateGraphNodeSelection();
             return true;
         }
@@ -27,7 +38,7 @@ export function scrollAndSelectNodeById(nodeId) {
         showSidebar();
         setSidebarSticky(true);
         selectProgram(selectedProgramId);
-        renderGraph({ nodes: allNodeData, edges: [] }, { centerNodeId: nodeId });
+        renderGraph({ nodes: allNodeData, edges: getCurrentEdges() }, { centerNodeId: nodeId });
         updateGraphNodeSelection();
         return true;
     }
@@ -195,6 +206,7 @@ function renderGraph(data, options = {}) {
             showSidebar();
             selectProgram(selectedProgramId);
             event.stopPropagation();
+            updateGraphNodeSelection(); // Ensure all nodes update selection border
         })
         .on("dblclick", openInNewTab)
         .on("mouseover", function(event, d) {
