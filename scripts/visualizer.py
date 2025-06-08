@@ -174,17 +174,14 @@ def static_export(output_path, base_folder):
     html = re.sub(r'<script type="module" src="\{\{ url_for\([^)]+\) \}\}"></script>\s*', '', html)
 
     # Insert inlined JS and data before </body>
-    data_json = json.dumps(data)
-    inlined = (
-        f'<script>window.STATIC_DATA = {data_json};</script>'
-        f'\n{js_code}'
-    )
+    with app.app_context():
+        data_json = jsonify(data).get_data(as_text=True)
+    inlined = f'<script>window.STATIC_DATA = {data_json};</script>'
     # Insert the inlined data script before the first <script type="module" tag
     script_tag_idx = html.find('<script type="module"')
-    if (script_tag_idx != -1):
+    if script_tag_idx != -1:
         html = html[:script_tag_idx] + inlined + '\n' + html[script_tag_idx:]
     else:
-        # fallback: insert before </body>
         html = html.replace('</body>', inlined + '\n</body>')
 
     # Write out
@@ -245,7 +242,8 @@ if __name__ == "__main__":
         import re as _re
         html = _re.sub(r"\{\{\s*url_for\('static', filename='([^']+)'\)\s*\}\}", r'static/\1', html)
         # Use json.dumps with ensure_ascii=False and escape < to prevent XSS/parse issues
-        data_json = jsonify(data)
+        with app.app_context():
+            data_json = jsonify(data).get_data(as_text=True)
         inlined = f'<script>window.STATIC_DATA = {data_json};</script>'
         # Insert the inlined data script before the first <script type="module" tag
         script_tag_idx = html.find('<script type="module"')
