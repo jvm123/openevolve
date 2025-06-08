@@ -3,6 +3,7 @@ import json
 import glob
 import logging
 import shutil
+import re as _re
 from flask import Flask, render_template, render_template_string, jsonify
 
 
@@ -100,9 +101,50 @@ def program_page(program_id):
     )
 
 
+def run_static_export(args):
+    output_dir = args.static_output
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load data and prepare JSON string
+    checkpoint_dir = find_latest_checkpoint(args.path)
+    if not checkpoint_dir:
+        raise RuntimeError(f"No checkpoint found in {args.path}")
+    data = load_evolution_data(checkpoint_dir)
+    logger.info(f"Exporting visualization for checkpoint: {checkpoint_dir}")
+
+    with app.app_context():
+        data_json = jsonify(data).get_data(as_text=True)
+    inlined = f"<script>window.STATIC_DATA = {data_json};</script>"
+
+    # Load index.html template
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    template_path = os.path.join(templates_dir, "index.html")
+    with open(template_path, 'r', encoding='utf-8') as f:
+        html = f.read()
+
+    # Insert static json data into the HTML
+    html = _re.sub(r"\{\{\s*url_for\('static', filename='([^']+)'\)\s*\}\}", r"static/\1", html)
+    script_tag_idx = html.find('<script type="module"')
+
+    if script_tag_idx != -1:
+        html = html[:script_tag_idx] + inlined + '\n' + html[script_tag_idx:]
+    else:
+        html = html.replace('</body>', inlined + '\n</body>')
+
+    with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write(html)
+
+    # Copy over static files
+    static_src = os.path.join(os.path.dirname(__file__), "static")
+    static_dst = os.path.join(output_dir, "static")
+    if os.path.exists(static_dst):
+        shutil.rmtree(static_dst)
+    shutil.copytree(static_src, static_dst)
+
+    logging.info(f"Static export written to {output_dir}/\nNote: This will only work correctly with a web server, not by opening the HTML file directly in a browser. Try $ python3 -m http.server --directory {output_dir} 8080")
+
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser(description="OpenEvolve Evolution Visualizer")
     parser.add_argument(
         "--path",
@@ -129,43 +171,7 @@ if __name__ == "__main__":
     logger.info(f"Current working directory: {os.getcwd()}")
 
     if args.static_output:
-        output_dir = args.static_output
-        os.makedirs(output_dir, exist_ok=True)
-        # Copy static/ folder recursively
-        static_src = os.path.join(os.path.dirname(__file__), "static")
-        static_dst = os.path.join(output_dir, "static")
-        if os.path.exists(static_dst):
-            shutil.rmtree(static_dst)
-        shutil.copytree(static_src, static_dst)
-        # Build custom index.html
-        checkpoint_dir = find_latest_checkpoint(args.path)
-        if not checkpoint_dir:
-            raise RuntimeError(f"No checkpoint found in {args.path}")
-        data = load_evolution_data(checkpoint_dir)
-        logger.info(f"Exporting visualization for checkpoint: {checkpoint_dir}")
-        templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-        template_path = os.path.join(templates_dir, 'index.html')
-        with open(template_path, 'r', encoding='utf-8') as f:
-            html = f.read()
-        # Replace Jinja url_for with static relative paths for static export
-        # (do not hard-code JS files; use regex for all url_for('static', ...))
-        import re as _re
-        html = _re.sub(r"\{\{\s*url_for\('static', filename='([^']+)'\)\s*\}\}", r'static/\1', html)
-        # Use json.dumps with ensure_ascii=False and escape < to prevent XSS/parse issues
-        with app.app_context():
-            data_json = jsonify(data).get_data(as_text=True)
-        inlined = f'<script>window.STATIC_DATA = {data_json};</script>'
-        # Insert the inlined data script before the first <script type="module" tag
-        script_tag_idx = html.find('<script type="module"')
-        if script_tag_idx != -1:
-            html = html[:script_tag_idx] + inlined + '\n' + html[script_tag_idx:]
-        else:
-            # fallback: insert before </body>
-            html = html.replace('</body>', inlined + '\n</body>')
-        # Write out index.html
-        with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as f:
-            f.write(html)
-        print(f"Static export written to {output_dir}/index.html and static/")
+        run_static_export(args)
         exit(0)
 
     log_level = getattr(logging, args.log_level.upper(), logging.INFO)
