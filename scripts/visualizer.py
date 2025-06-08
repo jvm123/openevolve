@@ -245,7 +245,7 @@ if __name__ == "__main__":
         import re as _re
         html = _re.sub(r"\{\{\s*url_for\('static', filename='([^']+)'\)\s*\}\}", r'static/\1', html)
         # Use json.dumps with ensure_ascii=False and escape < to prevent XSS/parse issues
-        data_json = json.dumps(data, ensure_ascii=False).replace('<', '\u003c')
+        data_json = jsonify(data)
         inlined = f'<script>window.STATIC_DATA = {data_json};</script>'
         # Insert the inlined data script before the first <script type="module" tag
         script_tag_idx = html.find('<script type="module"')
