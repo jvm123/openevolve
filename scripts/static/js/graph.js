@@ -96,6 +96,7 @@ export function selectProgram(programId) {
 
 let svg = null;
 let g = null;
+let simulation = null; // Keep simulation alive
 
 function ensureGraphSvg() {
     // Get latest width/height from main.js
@@ -140,10 +141,18 @@ function renderGraph(data, options = {}) {
         }
     }
     g.selectAll("*").remove();
-    const simulation = d3.forceSimulation(data.nodes)
-        .force("link", d3.forceLink(data.edges).id(d => d.id).distance(80))
-        .force("charge", d3.forceManyBody().strength(-200))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+
+    // Keep simulation alive and update nodes/links
+    if (!simulation) {
+        simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink(data.edges).id(d => d.id).distance(80))
+            .force("charge", d3.forceManyBody().strength(-200))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+    } else {
+        simulation.nodes(data.nodes);
+        simulation.force("link").links(data.edges);
+        simulation.alpha(0.7).restart();
+    }
 
     const link = g.append("g")
         .attr("stroke", "#999")
@@ -186,7 +195,6 @@ function renderGraph(data, options = {}) {
             showSidebar();
             selectProgram(selectedProgramId);
             event.stopPropagation();
-            applyDragHandlersToAllNodes();
         })
         .on("dblclick", openInNewTab)
         .on("mouseover", function(event, d) {
@@ -197,7 +205,6 @@ function renderGraph(data, options = {}) {
             d3.select(this)
                 .classed('node-hovered', true)
                 .attr('stroke', '#FFD600').attr('stroke-width', 4);
-            applyDragHandlersToAllNodes();
         })
         .on("mouseout", function(event, d) {
             d3.select(this)
@@ -207,7 +214,6 @@ function renderGraph(data, options = {}) {
             if (!selectedProgramId) {
                 hideSidebar();
             }
-            applyDragHandlersToAllNodes();
         });
 
     node.append("title").text(d => d.id);
@@ -291,7 +297,6 @@ function renderGraph(data, options = {}) {
                 .attr("stroke", function(d) { return (highlightIds.has(d.id) ? '#2196f3' : '#333'); })
                 .attr("stroke-width", 1.5);
             selectListNodeById(null);
-            applyDragHandlersToAllNodes();
         }
     });
 }
@@ -320,18 +325,18 @@ export function animateGraphNodeAttributes() {
 }
 
 function dragstarted(event, d) {
-    if (!event.active) event.subject.fx = event.subject.x;
-    if (!event.active) event.subject.fy = event.subject.y;
+    if (!event.active && simulation) simulation.alphaTarget(0.3).restart(); // Keep simulation alive
+    d.fx = d.x;
+    d.fy = d.y;
 }
 function dragged(event, d) {
     d.fx = event.x;
     d.fy = event.y;
 }
 function dragended(event, d) {
-    if (!event.active) {
-        d.fx = null;
-        d.fy = null;
-    }
+    if (!event.active && simulation) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
 }
 
 export { renderGraph, g };
