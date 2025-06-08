@@ -2,6 +2,7 @@ import os
 import json
 import glob
 import logging
+import shutil
 from flask import Flask, render_template, render_template_string, jsonify
 
 
@@ -111,16 +112,17 @@ def static_export(output_path, base_folder):
     # Read and concatenate all JS and CSS files
     static_dir = os.path.join(os.path.dirname(__file__), "static")
     templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    # Ensure main.js is last in the static export for correct dependency order
     js_files = [
-        'js/main.js',
-        'js/mainUI.js',
-        'js/sidebar.js',
         'js/graph.js',
         'js/performance.js',
+        'js/sidebar.js',
         'js/list.js',
+        'js/mainUI.js',
+        'js/main.js',
     ]
     css_files = ['css/main.css']
-    
+
     def strip_import_export(js):
         lines = js.splitlines()
         filtered = []
@@ -144,23 +146,17 @@ def static_export(output_path, base_folder):
             filtered.append(line)
         return '\n'.join(filtered), exports
 
+    # Python-only static export: concatenate all JS into a single <script type="module"> block
     js_code = ''
-    global_exports = set()
     for jsf in js_files:
         with open(os.path.join(static_dir, jsf), 'r', encoding='utf-8') as f:
             file_content = f.read()
-            file_content, exports = strip_import_export(file_content)
-            export_lines = ''
-            for sym in exports:
-                export_lines += f'\nwindow.{sym} = {sym};'
-                global_exports.add(sym)
-            js_code += (
-                f"\n// ---- {jsf} ----\n(function(){{\n"
-                f"{file_content}\n"
-                f"{export_lines}\n"
-                f"}})();\n"
-            )
-            
+            # Strip all import/export lines for static export
+            file_content, _ = strip_import_export(file_content)
+            js_code += f'// ---- {jsf} ----\n{file_content}\n'
+    # Inline as a single <script type="module">
+    js_code = f'<script type="module">\n{js_code}\n</script>\n'
+
     css_code = ''
     for cssf in css_files:
         with open(os.path.join(static_dir, cssf), 'r', encoding='utf-8') as f:
@@ -181,9 +177,15 @@ def static_export(output_path, base_folder):
     data_json = json.dumps(data)
     inlined = (
         f'<script>window.STATIC_DATA = {data_json};</script>'
-        f'\n<script type="module">{js_code}</script>'
+        f'\n{js_code}'
     )
-    html = html.replace('</body>', inlined + '\n</body>')
+    # Insert the inlined data script before the first <script type="module" tag
+    script_tag_idx = html.find('<script type="module"')
+    if (script_tag_idx != -1):
+        html = html[:script_tag_idx] + inlined + '\n' + html[script_tag_idx:]
+    else:
+        # fallback: insert before </body>
+        html = html.replace('</body>', inlined + '\n</body>')
 
     # Write out
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -210,17 +212,52 @@ if __name__ == "__main__":
         help="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
     )
     parser.add_argument(
-        "--static-html",
+        "--static-output",
         type=str,
         default=None,
-        help="Produce a static HTML export at this path and exit."
+        help="Produce a static HTML export in this directory and exit."
     )
     args = parser.parse_args()
 
     logger.info(f"Current working directory: {os.getcwd()}")
 
-    if args.static_html:
-        static_export(args.static_html, args.path)
+    if args.static_output:
+        output_dir = args.static_output
+        os.makedirs(output_dir, exist_ok=True)
+        # Copy static/ folder recursively
+        static_src = os.path.join(os.path.dirname(__file__), "static")
+        static_dst = os.path.join(output_dir, "static")
+        if os.path.exists(static_dst):
+            shutil.rmtree(static_dst)
+        shutil.copytree(static_src, static_dst)
+        # Build custom index.html
+        checkpoint_dir = find_latest_checkpoint(args.path)
+        if not checkpoint_dir:
+            raise RuntimeError(f"No checkpoint found in {args.path}")
+        data = load_evolution_data(checkpoint_dir)
+        logger.info(f"Exporting visualization for checkpoint: {checkpoint_dir}")
+        templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+        template_path = os.path.join(templates_dir, 'index.html')
+        with open(template_path, 'r', encoding='utf-8') as f:
+            html = f.read()
+        # Replace Jinja url_for with static relative paths for static export
+        # (do not hard-code JS files; use regex for all url_for('static', ...))
+        import re as _re
+        html = _re.sub(r"\{\{\s*url_for\('static', filename='([^']+)'\)\s*\}\}", r'static/\1', html)
+        # Use json.dumps with ensure_ascii=False and escape < to prevent XSS/parse issues
+        data_json = json.dumps(data, ensure_ascii=False).replace('<', '\u003c')
+        inlined = f'<script>window.STATIC_DATA = {data_json};</script>'
+        # Insert the inlined data script before the first <script type="module" tag
+        script_tag_idx = html.find('<script type="module"')
+        if script_tag_idx != -1:
+            html = html[:script_tag_idx] + inlined + '\n' + html[script_tag_idx:]
+        else:
+            # fallback: insert before </body>
+            html = html.replace('</body>', inlined + '\n</body>')
+        # Write out index.html
+        with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as f:
+            f.write(html)
+        print(f"Static export written to {output_dir}/index.html and static/")
         exit(0)
 
     log_level = getattr(logging, args.log_level.upper(), logging.INFO)

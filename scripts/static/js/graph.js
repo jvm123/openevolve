@@ -110,6 +110,12 @@ let g = null;
 let simulation = null; // Keep simulation alive
 let zoomBehavior = null; // Ensure zoomBehavior is available for locator
 
+// Ensure window.g is always up to date for static export compatibility
+Object.defineProperty(window, 'g', {
+    get: function() { return g; },
+    set: function(val) { g = val; }
+});
+
 function ensureGraphSvg() {
     // Get latest width/height from main.js
     let svgEl = d3.select('#graph').select('svg');
@@ -143,6 +149,11 @@ function renderGraph(data, options = {}) {
     const { svg: svgEl, g: gEl } = ensureGraphSvg();
     svg = svgEl;
     g = gEl;
+    window.g = g; // Ensure global assignment for static export
+    if (!g) {
+        console.warn('D3 group (g) is null in renderGraph. Aborting render.');
+        return;
+    }
     // Preserve zoom/pan
     let prevTransform = null;
     if (!svg.empty()) {
