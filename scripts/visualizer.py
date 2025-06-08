@@ -149,6 +149,7 @@ def run_static_export(args):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="OpenEvolve Evolution Visualizer")
     parser.add_argument(
         "--path",
