@@ -100,6 +100,60 @@ def program_page(program_id):
     )
 
 
+def static_export(output_path, base_folder):
+    import re
+    # 1. Find latest checkpoint and load data
+    checkpoint_dir = find_latest_checkpoint(base_folder)
+    if not checkpoint_dir:
+        raise RuntimeError(f"No checkpoint found in {base_folder}")
+    data = load_evolution_data(checkpoint_dir)
+    logger.info(f"Exporting visualization for checkpoint: {checkpoint_dir}")
+
+    # 2. Read and concatenate all JS and CSS files
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    js_files = [
+        'js/main.js',
+        'js/mainUI.js',
+        'js/sidebar.js',
+        'js/graph.js',
+        'js/performance.js',
+        'js/list.js',
+    ]
+    css_files = ['css/main.css']
+    js_code = ''
+    for jsf in js_files:
+        with open(os.path.join(static_dir, jsf), 'r', encoding='utf-8') as f:
+            js_code += f"\n// ---- {jsf} ----\n" + f.read()
+    css_code = ''
+    for cssf in css_files:
+        with open(os.path.join(static_dir, cssf), 'r', encoding='utf-8') as f:
+            css_code += f"\n/* ---- {cssf} ---- */\n" + f.read()
+
+    # Fetch the HTML template
+    template_path = os.path.join(static_dir, 'templates', 'index.html')
+    with open(template_path, 'r', encoding='utf-8') as f:
+        html = f.read()
+
+    # Replace CSS and JS links with inlined content
+    html = re.sub(r'<link rel="stylesheet"[^>]+>', f'<style>{css_code}</style>', html)
+
+    # Remove all <script type="module" src=...></script> except d3
+    html = re.sub(r'<script type="module" src="\{\{ url_for\([^)]+\) \}\}"></script>\s*', '', html)
+
+    # Insert inlined JS and data before </body>
+    data_json = json.dumps(data)
+    inlined = (
+        f'<script>window.STATIC_DATA = {data_json};</script>'
+        f'\n<script type="module">{js_code}</script>'
+    )
+    html = html.replace('</body>', inlined + '\n</body>')
+
+    # Write out
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+    print(f"Static export written to {output_path}")
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -118,7 +172,17 @@ if __name__ == "__main__":
         default="INFO",
         help="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
     )
+    parser.add_argument(
+        "--static-html",
+        type=str,
+        default=None,
+        help="Produce a static HTML export at this path and exit."
+    )
     args = parser.parse_args()
+
+    if args.static_html:
+        static_export(args.static_html, args.path)
+        exit(0)
 
     log_level = getattr(logging, args.log_level.upper(), logging.INFO)
     logging.basicConfig(level=log_level, format="[%(asctime)s] %(levelname)s %(name)s: %(message)s")

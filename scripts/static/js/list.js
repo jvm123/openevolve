@@ -116,6 +116,15 @@ export function renderNodeList(nodes) {
         metricsBlock.className = 'metrics-block-outer';
         metricsBlock.style.flex = '1 1 0%';
         row.appendChild(infoBlock);
+        // Add open in new window link only if not in static mode
+        if (!window.STATIC_DATA) {
+            let openLink = `<a href="/program/${node.id}" target="_blank" class="open-in-new" style="font-size:0.95em;">[open in new window]</a>`;
+            const openDiv = document.createElement('div');
+            openDiv.style.textAlign = 'center';
+            openDiv.style.margin = '-0.5em 0 0.5em 0';
+            openDiv.innerHTML = openLink;
+            row.appendChild(openDiv);
+        }
         row.appendChild(metricsBlock);
 
         row.onclick = (e) => {

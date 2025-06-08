@@ -35,46 +35,52 @@ function renderMetricBar(value, min, max, opts={}) {
     </span>`;
 }
 
-
-function fetchAndRender() {
-    fetch('/api/data')
-        .then(resp => resp.json())
-        .then(data => {
-            archiveProgramIds = Array.isArray(data.archive) ? data.archive : [];
-            const dataStr = JSON.stringify(data);
-            if (dataStr === lastDataStr) {
-                return;
-            }
-            lastDataStr = dataStr;
-            renderGraph(data);
-            renderNodeList(data.nodes);
-            document.getElementById('checkpoint-label').textContent =
-                "Checkpoint: " + data.checkpoint_dir;
-            // Update metric-select options. Keep the selected option.
-            const metricSelect = document.getElementById('metric-select');
-            const highlightSelect = document.getElementById('highlight-select');
-            const currentMetric = metricSelect.value;
-            const currentHighlight = highlightSelect.value;
-            metricSelect.innerHTML = '';
-            const metrics = new Set();
-            data.nodes.forEach(node => {
-                if (node.metrics) {
-                    Object.keys(node.metrics).forEach(metric => metrics.add(metric));
-                }
-            });
-            metrics.forEach(metric => {
-                const option = document.createElement('option');
-                option.value = metric;
-                option.textContent = metric;
-                metricSelect.appendChild(option);
-            });
-            if (metricSelect.options.length > 0) {
-                metricSelect.selectedIndex = 0;
-            }
+function loadAndRenderData(data) {
+    archiveProgramIds = Array.isArray(data.archive) ? data.archive : [];
+    lastDataStr = JSON.stringify(data);
+    renderGraph(data);
+    renderNodeList(data.nodes);
+    document.getElementById('checkpoint-label').textContent =
+        "Checkpoint: " + (data.checkpoint_dir || 'static export');
+    // Populate metric-select options
+    const metricSelect = document.getElementById('metric-select');
+    metricSelect.innerHTML = '';
+    const metrics = new Set();
+    data.nodes.forEach(node => {
+        if (node.metrics) {
+            Object.keys(node.metrics).forEach(metric => metrics.add(metric));
+        }
+    });
+    metrics.forEach(metric => {
+        const option = document.createElement('option');
+        option.value = metric;
+        option.textContent = metric;
+        metricSelect.appendChild(option);
+    });
+    if (metricSelect.options.length > 0) {
+        metricSelect.selectedIndex = 0;
+    }
+    // Hide or disable 'open in new window' links in static mode
+    if (window.STATIC_DATA) {
+        document.querySelectorAll('.open-in-new').forEach(el => {
+            el.style.display = 'none';
         });
+    }
 }
-fetchAndRender();
-setInterval(fetchAndRender, 2000); // Live update every 2s
+
+if (window.STATIC_DATA) {
+    loadAndRenderData(window.STATIC_DATA);
+} else {
+    function fetchAndRender() {
+        fetch('/api/data')
+            .then(resp => resp.json())
+            .then(data => {
+                loadAndRenderData(data);
+            });
+    }
+    fetchAndRender();
+    setInterval(fetchAndRender, 2000); // Live update every 2s
+}
 
 export let width = window.innerWidth;
 export let height = window.innerHeight;
