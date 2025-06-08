@@ -9,7 +9,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
     if (!toggleDiv) {
         toggleDiv = document.createElement('div');
         toggleDiv.id = 'perf-island-toggle';
-        toggleDiv.style = 'margin:0 0 1em 1em;display:flex;align-items:center;gap:0.7em;';
+        toggleDiv.style = 'display:flex;align-items:center;gap:0.7em;';
         toggleDiv.innerHTML = `
         <label class="toggle-switch" style="margin-right:0.7em;">
             <input type="checkbox" id="show-islands-toggle">

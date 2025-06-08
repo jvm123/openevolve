@@ -686,24 +686,6 @@ a:hover {
     transition: height 0.2s;
 }
 
-.list-summary-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 2.5em;
-  padding: 1.1em 1.5em 1.1em 1.5em;
-  background: #f7f7fa;
-  border-radius: 12px;
-  margin-bottom: 1.2em;
-  font-size: 1.18em;
-  box-shadow: 0 2px 12px #e6eaf344;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-[data-theme="dark"] .list-summary-bar {
-  background: #23272a;
-  color: #e6eaf3;
-  box-shadow: 0 2px 12px #1e3a8c44;
-}
 .summary-block {
   display: flex;
   align-items: center;
