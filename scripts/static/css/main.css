@@ -948,3 +948,49 @@ a:hover {
   position: relative;
   width: 80px;
 }
+
+.node-info-table {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.2em 1.2em;
+  margin-bottom: 0.5em;
+}
+.node-info-row {
+  display: contents;
+}
+.node-info-label {
+  font-weight: 500;
+  color: #444;
+  text-align: left;
+  white-space: nowrap;
+}
+.node-info-value {
+  text-align: left;
+  color: #222;
+  word-break: break-all;
+}
+.selected-metric-block-table {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.2em 1.2em;
+  align-items: center;
+  margin-bottom: 1.5em;
+}
+.selected-metric-label {
+  font-weight: bold;
+  color: #444;
+  text-align: left;
+}
+.selected-metric-value {
+  font-weight: normal;
+  color: #222;
+  text-align: left;
+}
+[data-theme="dark"] .node-info-label,
+[data-theme="dark"] .selected-metric-label {
+  color: #e6eaf3;
+}
+[data-theme="dark"] .node-info-value,
+[data-theme="dark"] .selected-metric-value {
+  color: #e6eaf3;
+}

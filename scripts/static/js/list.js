@@ -62,27 +62,27 @@ export function renderNodeList(nodes) {
         row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
         row.setAttribute('data-node-id', node.id); // for parent scroll
         row.tabIndex = 0;
-        // Selected metric block with metrics-bar and more padding
-        let selectedMetricHtml = '';
+        // Selected metric as a row in the info table
+        let selectedMetricRow = '';
         if (node.metrics && metric in node.metrics) {
             let val = (typeof node.metrics[metric] === 'number' && isFinite(node.metrics[metric])) ? node.metrics[metric].toFixed(4) : node.metrics[metric];
             // Compute min/max for the selected metric
             let allVals = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && isFinite(x));
             let minV = allVals.length ? Math.min(...allVals) : 0;
             let maxV = allVals.length ? Math.max(...allVals) : 1;
-            selectedMetricHtml = `<div class="selected-metric-block" style="font-weight:bold;font-size:1.08em;padding-bottom:1.5em;">
-                ${metric}: <span style="font-weight:normal;">${val}</span>
-                ${renderMetricBar(node.metrics[metric], minV, maxV)}
-            </div>`;
+            selectedMetricRow = `<div class="node-info-row"><span class="node-info-label">${metric}:</span><span class="node-info-value">${val}${renderMetricBar(node.metrics[metric], minV, maxV)}</span></div>`;
         }
+        // Info block with two-column layout for metadata, metric first
         const infoBlock = document.createElement('div');
         infoBlock.className = 'node-info-block';
         infoBlock.innerHTML = `
-            ${selectedMetricHtml}
-            <div><b>ID:</b> ${node.id}</div>
-            <div><b>Gen:</b> ${node.generation ?? ''}</div>
-            <div><b>Island:</b> ${node.island ?? ''}</div>
-            <div><b>Parent:</b> <a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></div>
+            <div class="node-info-table">
+                ${selectedMetricRow}
+                <div class="node-info-row"><span class="node-info-label">ID:</span><span class="node-info-value">${node.id}</span></div>
+                <div class="node-info-row"><span class="node-info-label">Gen:</span><span class="node-info-value">${node.generation ?? ''}</span></div>
+                <div class="node-info-row"><span class="node-info-label">Island:</span><span class="node-info-value">${node.island ?? ''}</span></div>
+                <div class="node-info-row"><span class="node-info-label">Parent:</span><span class="node-info-value"><a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></span></div>
+            </div>
         `;
         // Metrics block (remove selected metric)
         let metricsHtml = '<div class="metrics-block">';
