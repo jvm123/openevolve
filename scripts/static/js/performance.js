@@ -1,6 +1,7 @@
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, fetchAndRender, getSelectedMetric, selectedProgramId, setSelectedProgramId } from './main.js';
 import { getNodeRadius, getNodeColor, selectProgram, scrollAndSelectNodeById } from './graph.js';
 import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebarSticky } from './sidebar.js';
+import { selectListNodeById } from './list.js';
 
 (function() {
     const perfDiv = document.getElementById('view-performance');
@@ -179,6 +180,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                     setSelectedProgramId(d.id);
                     window._lastSelectedNodeData = d;
                     setSidebarSticky(true);
+                    selectListNodeById(d.id); // sync list selection
                     g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                         .attr('stroke', function(nd) {
                             return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
@@ -291,6 +293,7 @@ import { hideSidebar, sidebarSticky, showSidebarContent, showSidebar, setSidebar
                 setSelectedProgramId(d.id);
                 window._lastSelectedNodeData = d;
                 setSidebarSticky(true);
+                selectListNodeById(d.id); // sync list selection
                 g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                     .attr('stroke', function(nd) {
                         return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');

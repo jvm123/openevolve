@@ -1,6 +1,6 @@
 import { width, height, getHighlightNodes, allNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
 import { openInNewTab, showSidebarContent, sidebarSticky, showSidebar, setSidebarSticky, hideSidebar } from './sidebar.js';
-import { renderNodeList } from './list.js';
+import { renderNodeList, selectListNodeById } from './list.js';
 
 export function scrollAndSelectNodeById(nodeId) {
     const container = document.getElementById('node-list-container');
@@ -164,13 +164,12 @@ function renderGraph(data) {
         .on("click", function(event, d) {
             setSelectedProgramId(d.id);
             setSidebarSticky(true);
-            g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
-                .attr('stroke', function(nd) {
-                    return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
-                })
-                .attr('stroke-width', function(nd) {
-                    return selectedProgramId === nd.id ? 3 : 1.5;
-                });
+            selectListNodeById(d.id); // sync list selection
+            g.selectAll('circle')
+                .classed('node-hovered', false)
+                .classed('node-selected', false)
+                .classed('node-highlighted', nd => highlightIds.has(nd.id))
+                .classed('node-selected', nd => selectedProgramId === nd.id);
             d3.select(this).classed('node-selected', true);
             showSidebarContent(d, false);
             showSidebar();
@@ -244,7 +243,13 @@ export function animateGraphNodeAttributes() {
         .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
         .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
         .attr('opacity', 1)
-        .on('end', null);
+        .on('end', null)
+        .selection()
+        .each(function(d) {
+            d3.select(this)
+                .classed('node-highlighted', highlightIds.has(d.id))
+                .classed('node-selected', selectedProgramId === d.id);
+        });
     setTimeout(applyDragHandlersToAllNodes, 420);
 }
 

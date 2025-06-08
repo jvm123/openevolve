@@ -1,6 +1,7 @@
 import { allNodeData, archiveProgramIds, formatMetrics, renderMetricBar, getHighlightNodes, getSelectedMetric, setAllNodeData, selectedProgramId, setSelectedProgramId } from './main.js';
 import { showSidebar, setSidebarSticky, showSidebarContent } from './sidebar.js';
 import { selectProgram, scrollAndSelectNodeById } from './graph.js';
+import { selectPerformanceNodeById } from './performance.js';
 
 export function renderNodeList(nodes) {
     setAllNodeData(nodes);
@@ -122,13 +123,18 @@ export function renderNodeList(nodes) {
 
         row.onclick = (e) => {
             if (e.target.tagName === 'A') return;
-            setSelectedProgramId(node.id);
-            window._lastSelectedNodeData = node;
-            setSidebarSticky(true);
-            renderNodeList(allNodeData);
-            showSidebarContent(node, false);
-            showSidebarListView();
-            selectProgram(selectedProgramId);
+            // Only update if not already selected
+            if (selectedProgramId !== node.id) {
+                setSelectedProgramId(node.id);
+                window._lastSelectedNodeData = node;
+                setSidebarSticky(true);
+                // Ensure only one node is selected in all views
+                renderNodeList(allNodeData); // update list selection
+                showSidebarContent(node, false);
+                showSidebarListView();
+                selectProgram(node.id); // update branching graph
+                selectPerformanceNodeById(node.id); // update performance graph
+            }
         };
         // Parent link logic for list
         setTimeout(() => {
@@ -142,6 +148,19 @@ export function renderNodeList(nodes) {
         }, 0);
         container.appendChild(row);
     });
+}
+
+// Allow external selection from graphs to update the list view
+export function selectListNodeById(id) {
+    setSelectedProgramId(id);
+    renderNodeList(allNodeData);
+    const node = allNodeData.find(n => n.id == id);
+    if (node) {
+        window._lastSelectedNodeData = node;
+        setSidebarSticky(true);
+        showSidebarContent(node, false);
+        showSidebarListView();
+    }
 }
 
 // List search/sort events
