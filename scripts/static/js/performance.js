@@ -20,7 +20,7 @@ import { selectListNodeById } from './list.js';
         `;
         perfDiv.insertBefore(toggleDiv, perfDiv.firstChild);
     }
-    function renderPerformanceGraph(nodes) {
+    function renderPerformanceGraph(nodes, options = {}) {
         window.renderPerformanceGraph = renderPerformanceGraph;
         // --- Preserve zoom/pan transform ---
         let prevTransform = null;
@@ -72,19 +72,59 @@ import { selectListNodeById } from './list.js';
             .style('display', 'block');
 
         const g = svg.append('g').attr('class', 'zoom-group');
-        svg.call(
-            d3.zoom()
-                .scaleExtent([0.2, 10])
-                .on('zoom', function(event) {
-                    g.attr('transform', event.transform);
-                })
-        );
-        // --- Restore previous transform if any ---
+        const zoomBehavior = d3.zoom()
+            .scaleExtent([0.2, 10])
+            .on('zoom', function(event) {
+                g.attr('transform', event.transform);
+            });
+        svg.call(zoomBehavior);
         if (prevTransform) {
             g.attr('transform', prevTransform);
-            // Also update the zoom behavior's internal state
             const t = d3.zoomTransform(g.node());
-            svg.call(d3.zoom().transform, t);
+            svg.call(zoomBehavior.transform, t);
+        } else if (options.fitToNodes) {
+            // Intelligent zoom-to-fit on initial load
+            setTimeout(() => {
+                try {
+                    const allCircles = g.selectAll('circle').nodes();
+                    if (allCircles.length > 0) {
+                        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                        allCircles.forEach(c => {
+                            const bbox = c.getBBox();
+                            minX = Math.min(minX, bbox.x);
+                            minY = Math.min(minY, bbox.y);
+                            maxX = Math.max(maxX, bbox.x + bbox.width);
+                            maxY = Math.max(maxY, bbox.y + bbox.height);
+                        });
+                        const pad = 40;
+                        minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+                        const graphW = svg.attr('width');
+                        const graphH = svg.attr('height');
+                        const scale = Math.min(graphW / (maxX - minX), graphH / (maxY - minY), 1);
+                        const tx = (graphW - scale * (minX + maxX)) / 2;
+                        const ty = (graphH - scale * (minY + maxY)) / 2;
+                        const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+                        svg.transition().duration(400).call(zoomBehavior.transform, t);
+                    }
+                } catch {}
+            }, 0);
+        } else if (options.centerNodeId) {
+            // Center and zoom to a specific node
+            setTimeout(() => {
+                try {
+                    const node = g.selectAll('circle').filter(d => d.id == options.centerNodeId).node();
+                    if (node) {
+                        const bbox = node.getBBox();
+                        const graphW = svg.attr('width');
+                        const graphH = svg.attr('height');
+                        const scale = Math.min(graphW / (bbox.width * 6), graphH / (bbox.height * 6), 1.5); // zoom in a bit
+                        const tx = graphW/2 - scale * (bbox.x + bbox.width/2);
+                        const ty = graphH/2 - scale * (bbox.y + bbox.height/2);
+                        const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+                        svg.transition().duration(400).call(zoomBehavior.transform, t);
+                    }
+                } catch {}
+            }, 0);
         }
 
         let yScales = {};
@@ -399,11 +439,11 @@ import { selectListNodeById } from './list.js';
 })();
 
 // Select a node by ID and update graph and sidebar
-export function selectPerformanceNodeById(id) {
+export function selectPerformanceNodeById(id, opts = {}) {
     setSelectedProgramId(id);
     setSidebarSticky(true);
     if (typeof allNodeData !== 'undefined' && allNodeData.length) {
-        renderPerformanceGraph(allNodeData);
+        renderPerformanceGraph(allNodeData, opts);
         const node = allNodeData.find(n => n.id == id);
         if (node) showSidebarContent(node, false);
     }

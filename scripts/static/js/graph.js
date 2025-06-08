@@ -15,6 +15,7 @@ export function scrollAndSelectNodeById(nodeId) {
             showSidebar();
             setSidebarSticky(true);
             selectProgram(selectedProgramId);
+            renderGraph({ nodes: allNodeData, edges: [] }, { centerNodeId: nodeId });
             updateGraphNodeSelection();
             return true;
         }
@@ -26,6 +27,7 @@ export function scrollAndSelectNodeById(nodeId) {
         showSidebar();
         setSidebarSticky(true);
         selectProgram(selectedProgramId);
+        renderGraph({ nodes: allNodeData, edges: [] }, { centerNodeId: nodeId });
         updateGraphNodeSelection();
         return true;
     }
@@ -96,7 +98,7 @@ let svg = null;
 let g = null;
 
 function ensureGraphSvg() {
-    // Always get latest width/height from main.js
+    // Get latest width/height from main.js
     let svgEl = d3.select('#graph').select('svg');
     if (svgEl.empty()) {
         svgEl = d3.select('#graph').append('svg')
@@ -124,10 +126,19 @@ function applyDragHandlersToAllNodes() {
     });
 }
 
-function renderGraph(data) {
+function renderGraph(data, options = {}) {
     const { svg: svgEl, g: gEl } = ensureGraphSvg();
     svg = svgEl;
     g = gEl;
+    // Preserve zoom/pan
+    let prevTransform = null;
+    if (!svg.empty()) {
+        const gZoom = svg.select('g');
+        if (!gZoom.empty()) {
+            const transform = gZoom.attr('transform');
+            if (transform) prevTransform = transform;
+        }
+    }
     g.selectAll("*").remove();
     const simulation = d3.forceSimulation(data.nodes)
         .force("link", d3.forceLink(data.edges).id(d => d.id).distance(80))
@@ -212,6 +223,60 @@ function renderGraph(data) {
             .attr("cy", d => d.y);
     });
 
+    // Intelligent zoom/pan
+    const zoomBehavior = d3.zoom()
+        .scaleExtent([0.2, 10])
+        .on('zoom', function(event) {
+            g.attr('transform', event.transform);
+        });
+    svg.call(zoomBehavior);
+    if (prevTransform) {
+        g.attr('transform', prevTransform);
+        const t = d3.zoomTransform(g.node());
+        svg.call(zoomBehavior.transform, t);
+    } else if (options.fitToNodes) {
+        setTimeout(() => {
+            try {
+                const allCircles = g.selectAll('circle').nodes();
+                if (allCircles.length > 0) {
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    allCircles.forEach(c => {
+                        const bbox = c.getBBox();
+                        minX = Math.min(minX, bbox.x);
+                        minY = Math.min(minY, bbox.y);
+                        maxX = Math.max(maxX, bbox.x + bbox.width);
+                        maxY = Math.max(maxY, bbox.y + bbox.height);
+                    });
+                    const pad = 40;
+                    minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+                    const graphW = svg.attr('width');
+                    const graphH = svg.attr('height');
+                    const scale = Math.min(graphW / (maxX - minX), graphH / (maxY - minY), 1);
+                    const tx = (graphW - scale * (minX + maxX)) / 2;
+                    const ty = (graphH - scale * (minY + maxY)) / 2;
+                    const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+                    svg.transition().duration(400).call(zoomBehavior.transform, t);
+                }
+            } catch {}
+        }, 0);
+    } else if (options.centerNodeId) {
+        setTimeout(() => {
+            try {
+                const node = g.selectAll('circle').filter(d => d.id == options.centerNodeId).node();
+                if (node) {
+                    const bbox = node.getBBox();
+                    const graphW = svg.attr('width');
+                    const graphH = svg.attr('height');
+                    const scale = Math.min(graphW / (bbox.width * 6), graphH / (bbox.height * 6), 1.5);
+                    const tx = graphW/2 - scale * (bbox.x + bbox.width/2);
+                    const ty = graphH/2 - scale * (bbox.y + bbox.height/2);
+                    const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+                    svg.transition().duration(400).call(zoomBehavior.transform, t);
+                }
+            } catch {}
+        }, 0);
+    }
+
     selectProgram(selectedProgramId);
     applyDragHandlersToAllNodes();
 
@@ -225,7 +290,7 @@ function renderGraph(data) {
                 .classed("node-hovered", false)
                 .attr("stroke", function(d) { return (highlightIds.has(d.id) ? '#2196f3' : '#333'); })
                 .attr("stroke-width", 1.5);
-            selectListNodeById(null); // <-- Sync unselect with list view
+            selectListNodeById(null);
             applyDragHandlersToAllNodes();
         }
     });
