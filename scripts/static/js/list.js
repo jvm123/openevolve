@@ -62,7 +62,6 @@ export function renderNodeList(nodes) {
         row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
         row.setAttribute('data-node-id', node.id); // for parent scroll
         row.tabIndex = 0;
-        // Selected metric as a row in the info table
         let selectedMetricRow = '';
         if (node.metrics && metric in node.metrics) {
             let val = (typeof node.metrics[metric] === 'number' && isFinite(node.metrics[metric])) ? node.metrics[metric].toFixed(4) : node.metrics[metric];
@@ -70,7 +69,13 @@ export function renderNodeList(nodes) {
             let allVals = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && isFinite(x));
             let minV = allVals.length ? Math.min(...allVals) : 0;
             let maxV = allVals.length ? Math.max(...allVals) : 1;
-            selectedMetricRow = `<div class="node-info-row"><span class="node-info-label">${metric}:</span><span class="node-info-value">${val}${renderMetricBar(node.metrics[metric], minV, maxV)}</span></div>`;
+            selectedMetricRow = `<div class="node-info-row" style="padding-bottom:1.5em;">
+                <span class="node-info-label" style="font-weight:bold;">${metric}:</span>
+                <span class="node-info-value">
+                  <span style="margin-right:0.7em;">${val}</span>
+                  <span style="display:inline-block;vertical-align:middle;min-width:60px;">${renderMetricBar(node.metrics[metric], minV, maxV)}</span>
+                </span>
+            </div>`;
         }
         // Info block with two-column layout for metadata, metric first
         const infoBlock = document.createElement('div');

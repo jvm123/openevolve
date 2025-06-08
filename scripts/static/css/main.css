@@ -507,6 +507,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
+    margin: 1em 0;
 }
 .metrics-block {
     display: grid;
@@ -890,6 +891,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+  margin: 1em 0;
 }
 .metrics-block {
   display: grid;
