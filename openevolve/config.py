@@ -170,6 +170,9 @@ class DatabaseConfig:
     cleanup_old_artifacts: bool = True
     artifact_retention_days: int = 30
 
+    # Log build_prompts outputs into program JSON
+    log_prompts: bool = False
+
 
 @dataclass
 class EvaluatorConfig:
@@ -308,6 +311,7 @@ class Config:
                 "migration_interval": self.database.migration_interval,
                 "migration_rate": self.database.migration_rate,
                 "random_seed": self.database.random_seed,
+                "log_prompts": self.database.log_prompts,
             },
             "evaluator": {
                 "timeout": self.evaluator.timeout,
