@@ -293,7 +293,7 @@ import { selectListNodeById } from './list.js';
                 setSelectedProgramId(d.id);
                 window._lastSelectedNodeData = d;
                 setSidebarSticky(true);
-                selectListNodeById(d.id); // sync list selection
+                selectListNodeById(d.id);
                 g.selectAll('circle').classed('node-hovered', false).classed('node-selected', false)
                     .attr('stroke', function(nd) {
                         return selectedProgramId === nd.id ? 'red' : (highlightIds.has(nd.id) ? '#2196f3' : '#333');
@@ -302,7 +302,7 @@ import { selectListNodeById } from './list.js';
                         return selectedProgramId === nd.id ? 3 : 1.5;
                     });
                 d3.select(this).classed('node-selected', true);
-                showSidebarContent(d, false); // always update on click
+                showSidebarContent(d, false);
                 showSidebar();
                 selectProgram(selectedProgramId);
                 renderPerformanceGraph(nodes);
@@ -318,6 +318,8 @@ import { selectListNodeById } from './list.js';
                     .classed('node-hovered', false)
                     .attr('stroke', '#333')
                     .attr('stroke-width', 1.5);
+                selectListNodeById(null);
+                selectProgram(null);
             }
         });
         let perfSummary = document.getElementById('performance-summary-bar');

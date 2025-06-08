@@ -61,12 +61,11 @@ export function renderNodeList(nodes) {
     filtered.forEach(node => {
         const row = document.createElement('div');
         row.className = 'node-list-item' + (selectedProgramId === node.id ? ' selected' : '') + (highlightIds.has(node.id) ? ' highlighted' : '');
-        row.setAttribute('data-node-id', node.id); // for parent scroll
+        row.setAttribute('data-node-id', node.id);
         row.tabIndex = 0;
         let selectedMetricRow = '';
         if (node.metrics && metric in node.metrics) {
             let val = (typeof node.metrics[metric] === 'number' && isFinite(node.metrics[metric])) ? node.metrics[metric].toFixed(4) : node.metrics[metric];
-            // Compute min/max for the selected metric
             let allVals = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && isFinite(x));
             let minV = allVals.length ? Math.min(...allVals) : 0;
             let maxV = allVals.length ? Math.max(...allVals) : 1;
@@ -78,7 +77,6 @@ export function renderNodeList(nodes) {
                 </span>
             </div>`;
         }
-        // Info block with two-column layout for metadata, metric first
         const infoBlock = document.createElement('div');
         infoBlock.className = 'node-info-block';
         infoBlock.innerHTML = `
@@ -90,7 +88,6 @@ export function renderNodeList(nodes) {
                 <div class="node-info-row"><span class="node-info-label">Parent:</span><span class="node-info-value"><a href="#" class="parent-link" data-parent="${node.parent_id ?? ''}">${node.parent_id ?? 'None'}</a></span></div>
             </div>
         `;
-        // Metrics block (remove selected metric)
         let metricsHtml = '<div class="metrics-block">';
         if (node.metrics) {
             Object.entries(node.metrics).forEach(([k, v]) => {
@@ -113,27 +110,25 @@ export function renderNodeList(nodes) {
         row.style.border = selectedProgramId === node.id ? '2.5px solid red' : '1.5px solid #4442';
         row.style.boxShadow = highlightIds.has(node.id) ? '0 0 0 2px #2196f3' : 'none';
         row.style.background = '';
-        infoBlock.style.flex = '0 0 auto'; // Prevent info block from growing
+        infoBlock.style.flex = '0 0 auto';
         const metricsBlock = document.createElement('div');
         metricsBlock.innerHTML = metricsHtml;
         metricsBlock.className = 'metrics-block-outer';
-        metricsBlock.style.flex = '1 1 0%'; // Allow metrics block to grow and fill space
+        metricsBlock.style.flex = '1 1 0%';
         row.appendChild(infoBlock);
         row.appendChild(metricsBlock);
 
         row.onclick = (e) => {
             if (e.target.tagName === 'A') return;
-            // Only update if not already selected
             if (selectedProgramId !== node.id) {
                 setSelectedProgramId(node.id);
                 window._lastSelectedNodeData = node;
                 setSidebarSticky(true);
-                // Ensure only one node is selected in all views
-                renderNodeList(allNodeData); // update list selection
+                renderNodeList(allNodeData);
                 showSidebarContent(node, false);
                 showSidebarListView();
-                selectProgram(node.id); // update branching graph
-                selectPerformanceNodeById(node.id); // update performance graph
+                selectProgram(node.id);
+                selectPerformanceNodeById(node.id);
             }
         };
         // Parent link logic for list
@@ -149,8 +144,6 @@ export function renderNodeList(nodes) {
         container.appendChild(row);
     });
 }
-
-// Allow external selection from graphs to update the list view
 export function selectListNodeById(id) {
     setSelectedProgramId(id);
     renderNodeList(allNodeData);

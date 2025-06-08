@@ -225,6 +225,7 @@ function renderGraph(data) {
                 .classed("node-hovered", false)
                 .attr("stroke", function(d) { return (highlightIds.has(d.id) ? '#2196f3' : '#333'); })
                 .attr("stroke-width", 1.5);
+            selectListNodeById(null); // <-- Sync unselect with list view
             applyDragHandlersToAllNodes();
         }
     });
