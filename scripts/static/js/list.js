@@ -69,9 +69,9 @@ export function renderNodeList(nodes) {
             let allVals = nodes.map(n => (n.metrics && typeof n.metrics[metric] === 'number') ? n.metrics[metric] : null).filter(x => x !== null && isFinite(x));
             let minV = allVals.length ? Math.min(...allVals) : 0;
             let maxV = allVals.length ? Math.max(...allVals) : 1;
-            selectedMetricRow = `<div class="node-info-row" style="padding-bottom:1.5em;">
-                <span class="node-info-label" style="font-weight:bold;">${metric}:</span>
-                <span class="node-info-value">
+            selectedMetricRow = `<div class="node-info-row">
+                <span class="node-info-label" style="font-weight:bold;margin-bottom:1.5em;">${metric}:</span>
+                <span class="node-info-value" style="margin-bottom:1.5em;display:inline-block;">
                   <span style="margin-right:0.7em;">${val}</span>
                   <span style="display:inline-block;vertical-align:middle;min-width:60px;">${renderMetricBar(node.metrics[metric], minV, maxV)}</span>
                 </span>
