@@ -22,7 +22,17 @@ import { selectListNodeById } from './list.js';
     }
     function renderPerformanceGraph(nodes) {
         window.renderPerformanceGraph = renderPerformanceGraph;
-        d3.select('#performance-graph').remove();
+        // --- Preserve zoom/pan transform ---
+        let prevTransform = null;
+        const oldSvg = d3.select('#performance-graph');
+        if (!oldSvg.empty()) {
+            const g = oldSvg.select('g.zoom-group');
+            if (!g.empty()) {
+                const transform = g.attr('transform');
+                if (transform) prevTransform = transform;
+            }
+        }
+        oldSvg.remove();
         const sidebarEl = document.getElementById('sidebar');
         const padding = 32;
         const windowWidth = window.innerWidth;
@@ -69,6 +79,13 @@ import { selectListNodeById } from './list.js';
                     g.attr('transform', event.transform);
                 })
         );
+        // --- Restore previous transform if any ---
+        if (prevTransform) {
+            g.attr('transform', prevTransform);
+            // Also update the zoom behavior's internal state
+            const t = d3.zoomTransform(g.node());
+            svg.call(d3.zoom().transform, t);
+        }
 
         let yScales = {};
         islands.forEach((island, i) => {
