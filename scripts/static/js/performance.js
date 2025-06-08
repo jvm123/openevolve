@@ -407,17 +407,128 @@ import { selectListNodeById } from './list.js';
           </div>
         `;
     }
+    function animatePerformanceGraphAttributes() {
+        const svg = d3.select('#performance-graph');
+        if (svg.empty()) return;
+        const g = svg.select('g.zoom-group');
+        if (g.empty()) return;
+        const metric = getSelectedMetric();
+        const highlightFilter = document.getElementById('highlight-select').value;
+        const showIslands = document.getElementById('show-islands-toggle')?.checked;
+        const nodes = allNodeData;
+        const validNodes = nodes.filter(n => n.metrics && typeof n.metrics[metric] === 'number');
+        const undefinedNodes = nodes.filter(n => !n.metrics || n.metrics[metric] == null || isNaN(n.metrics[metric]));
+        let islands = [];
+        if (showIslands) {
+            islands = Array.from(new Set(nodes.map(n => n.island))).sort((a,b)=>a-b);
+        } else {
+            islands = [null];
+        }
+        const yExtent = d3.extent(nodes, d => d.generation);
+        const minGen = 0;
+        const maxGen = yExtent[1];
+        const margin = {top: 60, right: 40, bottom: 40, left: 60};
+        let undefinedBoxWidth = 70;
+        const undefinedBoxPad = 54;
+        const graphXOffset = undefinedBoxWidth + undefinedBoxPad;
+        const width = +svg.attr('width');
+        const height = +svg.attr('height');
+        const graphHeight = Math.max(400, (maxGen - minGen + 1) * 48 + margin.top + margin.bottom);
+        let yScales = {};
+        islands.forEach((island, i) => {
+            yScales[island] = d3.scaleLinear()
+                .domain([minGen, maxGen]).nice()
+                .range([margin.top + i*graphHeight, margin.top + (i+1)*graphHeight - margin.bottom]);
+        });
+        const xExtent = d3.extent(validNodes, d => d.metrics[metric]);
+        const x = d3.scaleLinear()
+            .domain([xExtent[0], xExtent[1]]).nice()
+            .range([margin.left+graphXOffset, width - margin.right]);
+        const highlightNodes = getHighlightNodes(nodes, highlightFilter, metric);
+        const highlightIds = new Set(highlightNodes.map(n => n.id));
+        // Animate valid nodes
+        g.selectAll('circle')
+            .filter(function(d) { return validNodes.includes(d); })
+            .transition().duration(400)
+            .attr('cx', d => x(d.metrics[metric]))
+            .attr('cy', d => showIslands ? yScales[d.island](d.generation) : yScales[null](d.generation))
+            .attr('r', d => getNodeRadius(d))
+            .attr('fill', d => getNodeColor(d))
+            .attr('stroke', d => selectedProgramId === d.id ? 'red' : (highlightIds.has(d.id) ? '#2196f3' : '#333'))
+            .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+            .attr('opacity', 0.85)
+            .on('end', null)
+            .selection()
+            .each(function(d) {
+                d3.select(this)
+                    .classed('node-highlighted', highlightIds.has(d.id))
+                    .classed('node-selected', selectedProgramId === d.id);
+            });
+        // Animate undefined nodes (NaN box)
+        g.selectAll('circle')
+            .filter(function(d) { return undefinedNodes.includes(d); })
+            .transition().duration(400)
+            .attr('cx', margin.left + undefinedBoxWidth/2)
+            .attr('cy', d => yScales[showIslands ? d.island : null](d.generation))
+            .attr('r', d => getNodeRadius(d))
+            .attr('fill', d => getNodeColor(d))
+            .attr('stroke', d => selectedProgramId === d.id ? 'red' : '#333')
+            .attr('stroke-width', d => selectedProgramId === d.id ? 3 : 1.5)
+            .attr('opacity', 0.85)
+            .on('end', null)
+            .selection()
+            .each(function(d) {
+                d3.select(this)
+                    .classed('node-selected', selectedProgramId === d.id);
+            });
+        // Animate edges
+        const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+        const edges = nodes.filter(n => n.parent_id && nodeById[n.parent_id]).map(n => {
+            return {
+                source: nodeById[n.parent_id],
+                target: n
+            };
+        });
+        g.selectAll('line')
+            .data(edges, d => d.target.id)
+            .transition().duration(400)
+            .attr('x1', d => {
+                const m = d.source.metrics && typeof d.source.metrics[metric] === 'number' ? d.source.metrics[metric] : null;
+                if (m === null || isNaN(m)) {
+                    return margin.left + undefinedBoxWidth/2;
+                } else {
+                    return x(m);
+                }
+            })
+            .attr('y1', d => {
+                const m = d.source.metrics && typeof d.source.metrics[metric] === 'number' ? d.source.metrics[metric] : null;
+                const island = showIslands ? d.source.island : null;
+                return yScales[island](d.source.generation);
+            })
+            .attr('x2', d => {
+                const m = d.target.metrics && typeof d.target.metrics[metric] === 'number' ? d.target.metrics[metric] : null;
+                if (m === null || isNaN(m)) {
+                    return margin.left + undefinedBoxWidth/2;
+                } else {
+                    return x(m);
+                }
+            })
+            .attr('y2', d => {
+                const m = d.target.metrics && typeof d.target.metrics[metric] === 'number' ? d.target.metrics[metric] : null;
+                const island = showIslands ? d.target.island : null;
+                return yScales[island](d.target.generation);
+            })
+            .attr('stroke', '#888')
+            .attr('stroke-width', 1.5)
+            .attr('opacity', 0.5);
+    }
     const metricSelect = document.getElementById('metric-select');
     metricSelect.addEventListener('change', function() {
-        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
-            renderPerformanceGraph(allNodeData);
-        }
+        animatePerformanceGraphAttributes();
     });
     const highlightSelect = document.getElementById('highlight-select');
     highlightSelect.addEventListener('change', function() {
-        if (typeof allNodeData !== 'undefined' && allNodeData.length) {
-            renderPerformanceGraph(allNodeData);
-        }
+        animatePerformanceGraphAttributes();
     });
     document.getElementById('tab-performance').addEventListener('click', function() {
         if (typeof allNodeData !== 'undefined' && allNodeData.length) {
