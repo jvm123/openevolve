@@ -112,10 +112,12 @@ export function renderNodeList(nodes) {
         row.style.border = selectedProgramId === node.id ? '2.5px solid red' : '1.5px solid #4442';
         row.style.boxShadow = highlightIds.has(node.id) ? '0 0 0 2px #2196f3' : 'none';
         row.style.background = '';
-        row.appendChild(infoBlock);
+        infoBlock.style.flex = '0 0 auto'; // Prevent info block from growing
         const metricsBlock = document.createElement('div');
         metricsBlock.innerHTML = metricsHtml;
         metricsBlock.className = 'metrics-block-outer';
+        metricsBlock.style.flex = '1 1 0%'; // Allow metrics block to grow and fill space
+        row.appendChild(infoBlock);
         row.appendChild(metricsBlock);
 
         row.onclick = (e) => {
