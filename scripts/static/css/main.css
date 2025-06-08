@@ -877,9 +877,8 @@ a:hover {
 }
 .metrics-block {
   display: grid;
-  grid-template-columns: minmax(70px,auto) minmax(70px,auto) minmax(80px,auto);
+  grid-template-columns: 0.3fr 0.3fr 1fr;
   gap: 0.5em 1.2em;
-  width: 100%;
 }
 .metric-row {
   display: contents;

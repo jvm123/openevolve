@@ -167,7 +167,7 @@ const sidebarEl = document.getElementById('sidebar');
 export function updateListSidebarLayout() {
     if (viewList.style.display !== 'none') {
         sidebarEl.style.transform = 'translateX(0)';
-        viewList.style.marginRight = sidebarEl.offsetWidth + 'px';
+        viewList.style.marginRight = (sidebarEl.offsetWidth+100) + 'px';
     } else {
         viewList.style.marginRight = '0';
     }
@@ -176,7 +176,7 @@ export function updateListSidebarLayout() {
 function showSidebarListView() {
     if (viewList.style.display !== 'none') {
         sidebarEl.style.transform = 'translateX(0)';
-        viewList.style.marginRight = sidebarEl.offsetWidth + 'px';
+        viewList.style.marginRight = (sidebarEl.offsetWidth+100) + 'px';
     } else {
         showSidebar();
     }
