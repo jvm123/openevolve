@@ -108,6 +108,7 @@ export function selectProgram(programId) {
 let svg = null;
 let g = null;
 let simulation = null; // Keep simulation alive
+let zoomBehavior = null; // Ensure zoomBehavior is available for locator
 
 function ensureGraphSvg() {
     // Get latest width/height from main.js
@@ -334,6 +335,42 @@ export function animateGraphNodeAttributes() {
                 .classed('node-selected', selectedProgramId === d.id);
         });
     setTimeout(applyDragHandlersToAllNodes, 420);
+}
+
+export function centerAndHighlightNodeInGraph(nodeId) {
+    if (!g || !svg) return;
+    // Ensure zoomBehavior is available and is a function
+    if (!zoomBehavior || typeof zoomBehavior !== 'function') {
+        zoomBehavior = d3.zoom()
+            .scaleExtent([0.2, 10])
+            .on('zoom', function(event) {
+                g.attr('transform', event.transform);
+            });
+        svg.call(zoomBehavior);
+    }
+    const nodeSel = g.selectAll('circle').filter(d => d.id == nodeId);
+    if (!nodeSel.empty()) {
+        // Pan/zoom to node
+        const node = nodeSel.node();
+        const bbox = node.getBBox();
+        const graphW = svg.attr('width');
+        const graphH = svg.attr('height');
+        const scale = Math.min(graphW / (bbox.width * 6), graphH / (bbox.height * 6), 1.5);
+        const tx = graphW/2 - scale * (bbox.x + bbox.width/2);
+        const ty = graphH/2 - scale * (bbox.y + bbox.height/2);
+        const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+        // Use the correct D3 v7 API for programmatic zoom
+        svg.transition().duration(400).call(zoomBehavior.transform, t);
+        // Yellow shadow highlight
+        nodeSel.each(function() {
+            const el = d3.select(this);
+            el.classed('node-locator-highlight', true)
+                .style('filter', 'drop-shadow(0 0 16px 8px #FFD600)');
+            el.transition().duration(350).style('filter', 'drop-shadow(0 0 24px 16px #FFD600)')
+                .transition().duration(650).style('filter', null)
+                .on('end', function() { el.classed('node-locator-highlight', false); });
+        });
+    }
 }
 
 function dragstarted(event, d) {

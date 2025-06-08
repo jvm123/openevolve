@@ -382,6 +382,12 @@ a:hover {
     stroke-width: 4px;
 }
 
+.node-locator-highlight {
+    filter: drop-shadow(0 0 24px 16px #FFD600) !important;
+    transition: filter 0.7s cubic-bezier(0.4,0,0.2,1);
+    z-index: 10;
+}
+
 @media (max-width: 1200px) {
     #toolbar {
         flex-wrap: wrap;
@@ -491,6 +497,12 @@ a:hover {
 [data-theme="dark"] .node-list-item.selected.highlighted {
     border: 2.5px solid red !important;
     box-shadow: 0 0 0 2px #00b4d8, 0 0 0 3px red;
+}
+
+.node-list-item.node-locator-highlight {
+    box-shadow: 0 0 0 4px #FFD600, 0 0 16px 8px #FFD600;
+    transition: box-shadow 0.7s cubic-bezier(0.4,0,0.2,1);
+    z-index: 10;
 }
 
 .node-info-block {

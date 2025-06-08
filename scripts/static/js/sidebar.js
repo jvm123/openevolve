@@ -22,8 +22,10 @@ export function showSidebarContent(d, fromHover = false) {
     }
     let starHtml = '';
     if (archiveProgramIds && archiveProgramIds.includes(d.id)) {
-        starHtml = '<span style="position:relative;top:0.05em;left:0.15em;font-size:1.6em;color:#FFD600;z-index:10;">★</span>';
+        starHtml = '<span style="position:relative;top:0.05em;left:0.15em;font-size:1.6em;color:#FFD600;z-index:10;" title="MAP-elites member" aria-label="MAP-elites member">★</span>';
     }
+    // Locator icon button (left of close X)
+    let locatorBtn = '<button id="sidebar-locator-btn" title="Locate selected node" aria-label="Locate selected node" style="position:absolute;top:0.05em;right:2.5em;font-size:1.5em;background:none;border:none;color:#FFD600;cursor:pointer;z-index:10;line-height:1;filter:drop-shadow(0 0 2px #FFD600);">⦿</button>';
     let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:0.05em;right:0.15em;font-size:1.6em;background:none;border:none;color:#888;cursor:pointer;z-index:10;line-height:1;">&times;</button>';
     let openLink = '<div style="text-align:center;margin:-1em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a></div>';
     let tabHtml = '';
@@ -53,6 +55,7 @@ export function showSidebarContent(d, fromHover = false) {
     sidebarContent.innerHTML =
         `<div style="position:relative;min-height:2em;">
             ${starHtml}
+            ${locatorBtn}
             ${closeBtn}
             ${openLink}
             <b>Program ID:</b> ${d.id}<br>
@@ -87,6 +90,39 @@ export function showSidebarContent(d, fromHover = false) {
         sidebarSticky = false;
         hideSidebar();
     };
+    // Locator button logic
+    const locatorBtnEl = document.getElementById('sidebar-locator-btn');
+    if (locatorBtnEl) {
+        locatorBtnEl.onclick = function(e) {
+            e.preventDefault();
+            // Use view display property for active view detection
+            const viewBranching = document.getElementById('view-branching');
+            const viewPerformance = document.getElementById('view-performance');
+            const viewList = document.getElementById('view-list');
+            if (viewBranching && viewBranching.style.display !== 'none') {
+                import('./graph.js').then(mod => {
+                    mod.centerAndHighlightNodeInGraph(d.id);
+                });
+            } else if (viewPerformance && viewPerformance.style.display !== 'none') {
+                import('./performance.js').then(mod => {
+                    mod.centerAndHighlightNodeInPerformanceGraph(d.id);
+                });
+            } else if (viewList && viewList.style.display !== 'none') {
+                // Scroll to list item
+                const container = document.getElementById('node-list-container');
+                if (container) {
+                    const rows = Array.from(container.children);
+                    const target = rows.find(div => div.getAttribute('data-node-id') === d.id);
+                    if (target) {
+                        target.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        // Optionally add a yellow highlight effect
+                        target.classList.add('node-locator-highlight');
+                        setTimeout(() => target.classList.remove('node-locator-highlight'), 1000);
+                    }
+                }
+            }
+        };
+    }
     // Parent link logic
     const parentLink = sidebarContent.querySelector('.parent-link');
     if (parentLink && parentLink.dataset.parent && parentLink.dataset.parent !== 'None' && parentLink.dataset.parent !== '') {
