@@ -160,6 +160,8 @@ class DatabaseConfig:
     # Random seed for reproducible sampling
     random_seed: Optional[int] = None
 
+    log_prompts: bool = False  # If True, log all build_prompts outputs into program JSON
+
 
 @dataclass
 class EvaluatorConfig:
@@ -294,6 +296,7 @@ class Config:
                 "migration_interval": self.database.migration_interval,
                 "migration_rate": self.database.migration_rate,
                 "random_seed": self.database.random_seed,
+                "log_prompts": self.database.log_prompts,
             },
             "evaluator": {
                 "timeout": self.evaluator.timeout,
