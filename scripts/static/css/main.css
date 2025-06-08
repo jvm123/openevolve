@@ -64,6 +64,17 @@ h1 span { font-size: 0.5em; color: #666; }
     box-sizing: border-box;
     box-shadow: 0 4px 16px #aaa;
 }
+#toolbar > .toolbar-spacer {
+    flex: 1 1 auto;
+    min-width: 1px;
+}
+#toolbar > .tabs,
+#toolbar > label.toolbar-label,
+#toolbar > select,
+#toolbar > .toolbar-darkmode {
+    margin-left: 0;
+    margin-right: 0;
+}
 [data-theme="dark"] #toolbar {
     background: #1a222c;
     border-bottom: 1.5px solid #22334a;

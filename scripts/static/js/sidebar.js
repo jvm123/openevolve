@@ -22,10 +22,10 @@ export function showSidebarContent(d, fromHover = false) {
     }
     let starHtml = '';
     if (archiveProgramIds && archiveProgramIds.includes(d.id)) {
-        starHtml = '<span style="position:absolute;top:0.2em;left:0.5em;font-size:1.5em;color:#FFD600;z-index:10;">★</span>';
+        starHtml = '<span style="position:relative;top:0.05em;left:0.15em;font-size:1.6em;color:#FFD600;z-index:10;">★</span>';
     }
-    let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:0.2em;right:0.5em;font-size:1.5em;background:none;border:none;color:#888;cursor:pointer;z-index:10;line-height:1;">&times;</button>';
-    let openLink = '<div style="text-align:center;margin:0.5em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a></div>';
+    let closeBtn = '<button id="sidebar-close-btn" style="position:absolute;top:0.05em;right:0.15em;font-size:1.6em;background:none;border:none;color:#888;cursor:pointer;z-index:10;line-height:1;">&times;</button>';
+    let openLink = '<div style="text-align:center;margin:-1em 0 1.2em 0;"><a href="/program/' + d.id + '" target="_blank" style="font-size:0.95em;">[open in new window]</a></div>';
     let tabHtml = '';
     let tabContentHtml = '';
     let tabNames = [];
