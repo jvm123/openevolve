@@ -45,7 +45,15 @@ export function showSidebarContent(d, fromHover = false) {
         if (tabName === 'Prompts') {
             let html = '';
             for (const [k, v] of Object.entries(d.prompts)) {
-                html += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre class="sidebar-pre">${v}</pre></div>`;
+                html += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre class="sidebar-pre">`;
+                if (v && typeof v === 'object' && !Array.isArray(v)) {
+                    for (const [subKey, subVal] of Object.entries(v)) {
+                        html += `<b>${subKey}:</b> ${subVal}<br /><br />`;
+                    }
+                } else {
+                    html += `${v}`;
+                }
+                html += `</pre></div>`;
             }
             return html;
         }
