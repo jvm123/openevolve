@@ -214,7 +214,7 @@ class PromptSampler:
         # If we don't have specific improvements to suggest
         if not improvement_areas:
             improvement_areas.append(
-                "Focus on optimizing the code for better performance on the target metrics"
+                "Focus on optimizing the solution for better performance on the target metrics"
             )
 
         return "\n".join([f"- {area}" for area in improvement_areas])
