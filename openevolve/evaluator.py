@@ -134,7 +134,6 @@ class Evaluator:
                     llm_eval_result = self._process_evaluation_result(llm_result)
 
                     # Combine metrics
-<<<<<<< HEAD
                     for name, value in llm_result.metrics.items():
                         eval_result.metrics[f"llm_{name}"] = value * self.config.llm_feedback_weight
 
@@ -155,10 +154,20 @@ class Evaluator:
 
                     if llm_eval_result and llm_eval_result.has_artifacts():
                         self._pending_artifacts[program_id].update(llm_eval_result.artifacts)
-=======
-                    for name, value in feedback_metrics.items():
-                        metrics[f"llm_{name}"] = value * self.config.llm_feedback_weight if isinstance(value, (int, float)) else value
->>>>>>> b2f4f4d (Pass-through of non-float metrics returned as part of the LLM feedback, to enable string feedback)
+
+                    llm_result = await self._llm_evaluate(program_code)
+                    llm_eval_result = self._process_evaluation_result(llm_result)
+
+                    # Combine metrics
+                    for name, value in llm_eval_result.metrics.items():
+                        eval_result.metrics[f"llm_{name}"] = value * self.config.llm_feedback_weight
+
+                # Store artifacts if enabled and present
+                if artifacts_enabled and eval_result.has_artifacts() and program_id:
+                    # Merge eval_result artifacts with llm artifacts if they exist
+                    self._pending_artifacts[program_id] = eval_result.artifacts
+                    if llm_eval_result and llm_eval_result.has_artifacts():
+                        self._pending_artifacts[program_id].update(llm_eval_result.artifacts)
 
                 elapsed = time.time() - start_time
                 logger.info(
