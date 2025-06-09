@@ -22,7 +22,7 @@ llm:
 prompt:
   num_top_programs: 3
   use_template_stochasticity: true
-  template_dir: "examples/llm_feedback/prompts"
+  template_dir: "examples/content_writing/prompts"
   num_top_programs: 0                 # Number of top-performing programs to include
   num_diverse_programs: 0             # Number of diverse programs to include
 
