@@ -320,6 +320,7 @@ class OpenEvolve:
                     ),
                     program_id=child_id,
                     prompt=prompt,
+                    responses=[llm_response],
                 )
 
                 # Increment generation for current island
