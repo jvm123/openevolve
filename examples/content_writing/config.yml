@@ -1,0 +1,47 @@
+max_iterations: 1
+checkpoint_interval: 1
+log_level: "INFO"
+
+# LLM configuration
+llm:
+  models:
+    - name: "llama-4-scout-17b-16e-instruct"
+      weight: 0.5
+      temperature: 0.9
+    - name: "llama-4-scout-17b-16e-instruct"
+      weight: 0.5
+      temperature: 1.5
+  # api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
+  # api_base: "https://api.openai.com/v1/"
+  # api_base: "http://localhost:11434/v1/"
+  api_base: "https://api.cerebras.ai/v1/"
+  top_p: 0.95
+  max_tokens: 4096
+
+# Prompt configuration
+prompt:
+  num_top_programs: 3
+  use_template_stochasticity: true
+  template_dir: "examples/llm_feedback/prompts"
+  num_top_programs: 0                 # Number of top-performing programs to include
+  num_diverse_programs: 0             # Number of diverse programs to include
+
+# Database configuration
+database:
+  num_islands: 3
+  elite_selection_ratio: 0.1
+  exploitation_ratio: 0.7
+  log_prompts: true
+
+# Evaluator configuration
+evaluator:
+  timeout: 60
+  cascade_evaluation: false
+  parallel_evaluations: 4
+  use_llm_feedback: true
+  llm_feedback_weight: 0.5
+
+
+# Evolution settings
+diff_based_evolution: true
+allow_full_rewrites: false
