@@ -48,11 +48,18 @@ export function showSidebarContent(d, fromHover = false) {
                 html += `<div style="margin-bottom:0.7em;"><b>${k}:</b><pre class="sidebar-pre">`;
                 if (v && typeof v === 'object' && !Array.isArray(v)) {
                     for (const [subKey, subVal] of Object.entries(v)) {
-                        html += `<b>${subKey}:</b> ${subVal}<br /><br />`;
+                        if (Array.isArray(subVal)) {
+                            subVal.forEach((item, idx) => {
+                                html += `<b>${subKey} #${idx + 1}:</b> ${item}<br /><br />`;
+                            });
+                        } else {
+                            html += `<b>${subKey}:</b> ${subVal}<br /><br />`;
+                        }
                     }
                 } else {
-                    html += `${v}`;
+                    html += `${v}<br /><br />`;
                 }
+                html = html.slice(0, -12);
                 html += `</pre></div>`;
             }
             return html;
