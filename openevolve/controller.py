@@ -108,9 +108,6 @@ class OpenEvolve:
         if self.config.random_seed is not None:
             self.config.database.random_seed = self.config.random_seed
 
-        # Prompt log
-        self.prompts_by_program: Dict[str, Dict[str, Dict[str, str]]] = None
-
         self.database = ProgramDatabase(self.config.database)
 
         self.evaluator = Evaluator(
