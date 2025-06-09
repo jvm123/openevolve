@@ -134,6 +134,7 @@ class Evaluator:
                     llm_eval_result = self._process_evaluation_result(llm_result)
 
                     # Combine metrics
+<<<<<<< HEAD
                     for name, value in llm_result.metrics.items():
                         eval_result.metrics[f"llm_{name}"] = value * self.config.llm_feedback_weight
 
@@ -154,6 +155,10 @@ class Evaluator:
 
                     if llm_eval_result and llm_eval_result.has_artifacts():
                         self._pending_artifacts[program_id].update(llm_eval_result.artifacts)
+=======
+                    for name, value in feedback_metrics.items():
+                        metrics[f"llm_{name}"] = value * self.config.llm_feedback_weight if isinstance(value, (int, float)) else value
+>>>>>>> b2f4f4d (Pass-through of non-float metrics returned as part of the LLM feedback, to enable string feedback)
 
                 elapsed = time.time() - start_time
                 logger.info(
@@ -405,16 +410,16 @@ class Evaluator:
                 current_program=program_code, template_key="evaluation"
             )
 
-            # Log prompt to database
-            if self.database and program_id:
-                self.database.log_prompt(
-                    program_id=program_id, template_key="evaluation", prompt=prompt
-                )
-
             # Get LLM response
             responses = await self.llm_ensemble.generate_all_with_context(
                 prompt["system"], [{"role": "user", "content": prompt["user"]}]
             )
+
+            # Log prompt and response to database
+            if self.database and program_id:
+                self.database.log_prompt(
+                    program_id=program_id, template_key="evaluation", prompt=prompt, responses=responses
+                )
 
             # Extract JSON from response
             try:
@@ -453,11 +458,13 @@ class Evaluator:
                     weight = self.llm_ensemble.weights[i] if self.llm_ensemble.weights else 1.0
 
                     # Average the metrics
-                    for name, value in metrics.items():
-                        if name in avg_metrics:
-                            avg_metrics[name] += value * weight
+                    for name, value in result.items():
+                        if not isinstance(value, (int, float)):
+                            avg_metrics[name] = value
+                        elif name in avg_metrics:
+                            avg_metrics[name] += float(value) * weight
                         else:
-                            avg_metrics[name] = value * weight
+                            avg_metrics[name] = float(value) * weight
 
                 return EvaluationResult(
                     metrics=avg_metrics,
