@@ -180,7 +180,6 @@ if __name__ == "__main__":
 
     if args.static_output:
         run_static_export(args)
-        exit(0)
 
     os.environ["EVOLVE_OUTPUT"] = args.path
     logger.info(
