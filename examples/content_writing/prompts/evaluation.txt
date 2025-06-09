@@ -16,12 +16,12 @@ Answer to evaluate:
 
 Return your evaluation as a JSON object with the following format:
 {{
-    "beauty": [score],
-    "inspiring": [score],
-    "emotion": [score],
-    "creativity": [score],
-    "syntax": [score],
-    "length": [score],
+    "beauty": score1,
+    "inspiring": score2,
+    "emotion": score3,
+    "creativity": score4,
+    "syntax": score5,
+    "length": score6,
     "improvement_suggestion": "..",
 }}
 Even for invalid input, return nothing but the JSON object.

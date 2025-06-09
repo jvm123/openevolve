@@ -2,6 +2,8 @@
 - Current metrics: {metrics}
 - Areas identified for improvement: {improvement_areas}
 
+{artifacts}
+
 # Evolution History
 {evolution_history}
 

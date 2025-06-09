@@ -2,6 +2,8 @@
 - Current performance metrics: {metrics}
 - Areas identified for improvement: {improvement_areas}
 
+{artifacts}
+
 # Evolution History
 {evolution_history}
 
@@ -30,5 +32,3 @@ Tyger Tyger, burning bright, In the forests of the night; What immortal hand or 
 
 You can suggest multiple changes. Each SEARCH section must exactly match text in the current solution.
 Be thoughtful about your changes and explain your reasoning thoroughly.
-
-IMPORTANT: Do not necessarily rewrite the entire solution - focus on targeted improvements.
