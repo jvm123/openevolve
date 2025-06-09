@@ -418,6 +418,10 @@ class ProgramDatabase:
         program_dict = program.to_dict()
         if prompts:
             program_dict["prompts"] = prompts
+<<<<<<< HEAD
+=======
+
+>>>>>>> f97327b (Restored prompt logging feature, that was lost in merge)
         program_path = os.path.join(programs_dir, f"{program.id}.json")
         with open(program_path, "w") as f:
             json.dump(program_dict, f)

@@ -108,6 +108,9 @@ class OpenEvolve:
         if self.config.random_seed is not None:
             self.config.database.random_seed = self.config.random_seed
 
+        # Prompt log
+        self.prompts_by_program: Dict[str, Dict[str, Dict[str, str]]] = None
+
         self.database = ProgramDatabase(self.config.database)
 
         self.evaluator = Evaluator(
@@ -308,6 +311,16 @@ class OpenEvolve:
 
                 # Add to database (will be added to current island)
                 self.database.add(child_program, iteration=i + 1)
+
+                # Log prompts
+                self.database.log_prompt(
+                    template_key=(
+                        "full_rewrite_user" if self.config.allow_full_rewrites else "diff_user"
+                    ),
+                    program_id=child_id,
+                    prompt=prompt,
+                    responses=[llm_response],
+                )
 
                 # Store artifacts if they exist
                 if artifacts:

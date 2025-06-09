@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import traceback
 
 from openevolve.config import EvaluatorConfig
+from openevolve.database import ProgramDatabase
 from openevolve.evaluation_result import EvaluationResult
 from openevolve.database import ProgramDatabase
 from openevolve.llm.ensemble import LLMEnsemble

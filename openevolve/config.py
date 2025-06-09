@@ -133,7 +133,6 @@ class PromptConfig:
     max_artifact_bytes: int = 20 * 1024  # 20KB in prompt
     artifact_security_filter: bool = True
 
-
 @dataclass
 class DatabaseConfig:
     """Configuration for the program database"""
@@ -141,6 +140,9 @@ class DatabaseConfig:
     # General settings
     db_path: Optional[str] = None  # Path to store database on disk
     in_memory: bool = True
+
+    # Prompt and response logging to programs/<id>.json
+    log_prompts: bool = False
 
     # Evolutionary parameters
     population_size: int = 1000
