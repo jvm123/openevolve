@@ -118,6 +118,24 @@ export function showSidebarContent(d, fromHover = false) {
             <b>Metrics:</b><br>${formatMetrics(d.metrics)}<br><br>
             ${tabHtml}${tabContentHtml}
         </div>`;
+
+    // Helper to attach prompt select handler
+    function attachPromptSelectHandler() {
+        const promptSelect = document.getElementById('sidebar-prompt-select');
+        if (promptSelect) {
+            promptSelect.onchange = function() {
+                localStorage.setItem('sidebarPromptSelect', promptSelect.value);
+                // Only re-render the Prompts tab, not the whole sidebar
+                const tabContent = document.getElementById('sidebar-tab-content');
+                if (tabContent) {
+                    tabContent.innerHTML = renderSidebarTabContent('Prompts', d, children);
+                    attachPromptSelectHandler();
+                }
+            };
+        }
+    }
+    attachPromptSelectHandler();
+
     if (tabNames.length > 1) {
         const tabBar = document.getElementById('sidebar-tab-bar');
         Array.from(tabBar.children).forEach(tabEl => {
@@ -128,19 +146,8 @@ export function showSidebarContent(d, fromHover = false) {
                 lastSidebarTab = tabName;
                 const tabContent = document.getElementById('sidebar-tab-content');
                 tabContent.innerHTML = renderSidebarTabContent(tabName, d, children);
-                // Add prompt select event if Prompts tab
                 if (tabName === 'Prompts') {
-                    const promptSelect = document.getElementById('sidebar-prompt-select');
-                    if (promptSelect) {
-                        promptSelect.onchange = function() {
-                            localStorage.setItem('sidebarPromptSelect', promptSelect.value);
-                            // Re-render Prompts tab with new selection
-                            tabContent.innerHTML = renderSidebarTabContent('Prompts', d, children);
-                            // Re-attach event
-                            const newPromptSelect = document.getElementById('sidebar-prompt-select');
-                            if (newPromptSelect) newPromptSelect.onchange = promptSelect.onchange;
-                        };
-                    }
+                    attachPromptSelectHandler();
                 }
                 setTimeout(() => {
                     document.querySelectorAll('.child-link').forEach(link => {
@@ -167,18 +174,7 @@ export function showSidebarContent(d, fromHover = false) {
         });
     }
     setTimeout(() => {
-        const promptSelect = document.getElementById('sidebar-prompt-select');
-        if (promptSelect) {
-            promptSelect.onchange = function() {
-                localStorage.setItem('sidebarPromptSelect', promptSelect.value);
-                // Re-render Prompts tab with new selection
-                const tabContent = document.getElementById('sidebar-tab-content');
-                tabContent.innerHTML = renderSidebarTabContent('Prompts', d, children);
-                // Re-attach event
-                const newPromptSelect = document.getElementById('sidebar-prompt-select');
-                if (newPromptSelect) newPromptSelect.onchange = promptSelect.onchange;
-            };
-        }
+        attachPromptSelectHandler();
         document.querySelectorAll('.child-link').forEach(link => {
             link.onclick = function(e) {
                 e.preventDefault();
