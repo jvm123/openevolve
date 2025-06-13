@@ -152,9 +152,17 @@ class Evaluator:
                     # Merge eval_result artifacts with llm artifacts if they exist
                     if eval_result.has_artifacts():
                         self._pending_artifacts[program_id].update(eval_result.artifacts)
+                        logger.debug(
+                            f"Program{program_id_str} returned artifacts: "
+                            f"{eval_result.artifacts}"
+                        )
 
                     if llm_eval_result and llm_eval_result.has_artifacts():
                         self._pending_artifacts[program_id].update(llm_eval_result.artifacts)
+                        logger.debug(
+                            f"Program{program_id_str} returned LLM artifacts: "
+                            f"{llm_eval_result.artifacts}"
+                        )
 
                     llm_result = await self._llm_evaluate(program_code)
                     llm_eval_result = self._process_evaluation_result(llm_result)
