@@ -30,5 +30,4 @@ poem stub
 Tyger Tyger, burning bright, In the forests of the night; What immortal hand or eye
 >>>>>>> REPLACE
 
-You can suggest multiple changes. Each SEARCH section must exactly match text in the current solution.
-Be thoughtful about your changes and explain your reasoning thoroughly.
+You can suggest multiple changes. Each SEARCH section must exactly match text in the current solution. If the solution is a blank placeholder, make sure to respond with exactly one diff replacement -- searching for the existing placeholder string, replacing it with your initial solution.

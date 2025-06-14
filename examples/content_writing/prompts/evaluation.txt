@@ -1,10 +1,6 @@
 Evaluate the following poem:
-1. Beauty: Is it beautiful?
-2. Inspiring: Is its message inspired and meaningful?
-3. Emotion: Does the poem trigger an emotional response?
-4. Creativity: Is it creative?
-5. Syntax: Is its syntax good? Is it only a poem or does it also contain non-poem content (if yes, rate as 0)? Are its lines overly long (if yes, rate low)?
-6. Overall score: Give an overall rating. If Poem, Syntax or Length evaluation was not okay, give a bad overall feedback.
+1. Beauty: Is it beautiful? Consider the many aspects of beauty, including simplicity, emotion, mystery, twists, inspiration, meaning, creativity ...
+2. Overall score: Give an overall rating. If Poem, Syntax or Length evaluation was not okay, give a bad overall feedback.
 
 For each metric, provide a score between 0.0 and 1.0, where 1.0 is best.
 
@@ -16,10 +12,7 @@ Answer to evaluate:
 Return your evaluation as a JSON object with the following format:
 {{
     "beauty": score1,
-    "inspiring": score2,
-    "emotion": score3,
-    "creativity": score4,
-    "syntax": score5,
+    "overall_score": score2,
     "improvement_suggestion": "..",
 }}
 Even for invalid input, return nothing but the JSON object.

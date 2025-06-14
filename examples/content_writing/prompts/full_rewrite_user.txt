@@ -15,5 +15,6 @@
 # Task
 Rewrite the answer to improve its performance on the specified metrics.
 Provide the complete new answer. Do not add reasoning, changelog or comments after the answer!
+The resulting poem will directly be printed for a customer.
 
 # Your rewritten answer here

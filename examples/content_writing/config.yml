@@ -5,12 +5,16 @@ log_level: "INFO"
 # LLM configuration
 llm:
   models:
-    - name: "llama-4-scout-17b-16e-instruct"
-      weight: 0.5
-      temperature: 0.9
-    - name: "llama-4-scout-17b-16e-instruct"
-      weight: 0.5
+    - name: "llama3.1-8b"
+      weight: 0.8
       temperature: 1.5
+    - name: "llama-4-scout-17b-16e-instruct"
+      weight: 0.2
+      temperature: 0.9
+  evaluator_models:
+    - name: "llama-4-scout-17b-16e-instruct"
+      weight: 1.0
+      temperature: 0.9
   # api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
   # api_base: "https://api.openai.com/v1/"
   # api_base: "http://localhost:11434/v1/"
@@ -28,7 +32,7 @@ prompt:
 
 # Database configuration
 database:
-  num_islands: 3
+  num_islands: 10
   elite_selection_ratio: 0.1
   exploitation_ratio: 0.7
   log_prompts: true
@@ -36,10 +40,10 @@ database:
 # Evaluator configuration
 evaluator:
   timeout: 60
-  cascade_evaluation: false
-  parallel_evaluations: 4
+  cascade_evaluation: true
+  parallel_evaluations: 1
   use_llm_feedback: true
-  llm_feedback_weight: 0.5
+  llm_feedback_weight: 1.0
 
 
 # Evolution settings
