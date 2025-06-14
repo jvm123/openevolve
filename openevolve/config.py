@@ -142,7 +142,7 @@ class DatabaseConfig:
     in_memory: bool = True
 
     # Prompt and response logging to programs/<id>.json
-    log_prompts: bool = False
+    log_prompts: bool = True
 
     # Evolutionary parameters
     population_size: int = 1000
@@ -171,9 +171,6 @@ class DatabaseConfig:
     artifact_size_threshold: int = 32 * 1024  # 32KB threshold
     cleanup_old_artifacts: bool = True
     artifact_retention_days: int = 30
-
-    # Log build_prompts outputs into program JSON
-    log_prompts: bool = False
 
 
 @dataclass
